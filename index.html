@@ -4,12 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#8f3d2f">
-  <meta name="description" content="Recetario personal para guardar, buscar y consultar recetas propias por ingredientes.">
+  <meta name="description" content="Recetario personal para guardar, buscar y consultar recetas propias por varios ingredientes.">
   <title>Recetario de Javi</title>
   <link rel="icon" href="assets/recetario.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=0.1.0">
-  <script defer src="app.js?v=0.1.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.2.0">
+  <link rel="stylesheet" href="supabase.css?v=0.2.0">
+  <script defer src="recetario-config.js?v=0.2.0"></script>
+  <script defer src="app.js?v=0.2.0"></script>
+  <script defer src="supabase-sync.js?v=0.2.0"></script>
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -25,6 +28,9 @@
       </a>
       <nav class="header-actions" aria-label="Acciones principales">
         <button class="button button--soft" id="export-button" type="button">Exportar</button>
+        <button class="button button--soft" id="auth-button" type="button">Acceder</button>
+        <button class="button button--soft" id="sync-local-button" type="button" hidden>Subir recetas locales</button>
+        <button class="button button--soft" id="logout-button" type="button" hidden>Cerrar sesión</button>
         <button class="button" id="new-recipe-button" type="button">+ Nueva receta</button>
       </nav>
     </div>
@@ -36,14 +42,15 @@
         <div>
           <span class="eyebrow">Tu cocina, organizada</span>
           <h1>Encuentra qué cocinar con lo que tienes.</h1>
-          <p class="hero-copy">Guarda recetas propias, consulta ingredientes y pasos, puntúalas y encuéntralas por nombre, categoría o ingredientes.</p>
+          <p class="hero-copy">Guarda recetas propias, consulta ingredientes y pasos, puntúalas y encuéntralas por nombre, categoría o combinando varios ingredientes.</p>
 
           <form class="search-panel" id="search-form" role="search">
-            <label for="recipe-search">Buscar receta o ingrediente</label>
+            <label for="recipe-search">Buscar receta o varios ingredientes</label>
             <div class="search-row">
-              <input id="recipe-search" name="search" type="search" autocomplete="off" placeholder="Ej.: pollo, tomate, pasta…">
+              <input id="recipe-search" name="search" type="search" autocomplete="off" placeholder="Ej.: pollo, patata, cebolla">
               <button class="button" type="submit">Buscar</button>
             </div>
+            <p class="search-help">Separa los ingredientes con comas o con el signo +. Solo aparecerán recetas que contengan todos.</p>
             <div class="quick-filters" aria-label="Ingredientes frecuentes">
               <button type="button" data-search-chip="pollo">Pollo</button>
               <button type="button" data-search-chip="patata">Patata</button>
@@ -51,6 +58,7 @@
               <button type="button" data-search-chip="pasta">Pasta</button>
               <button type="button" data-search-chip="huevo">Huevo</button>
             </div>
+            <div class="active-search-terms" id="active-search-terms" aria-label="Ingredientes activos" hidden></div>
           </form>
         </div>
 
@@ -100,8 +108,8 @@
 
         <div class="empty-state" id="empty-state" hidden>
           <span aria-hidden="true">🥣</span>
-          <h3>No hay recetas que coincidan</h3>
-          <p>Prueba con otro ingrediente o limpia los filtros.</p>
+          <h3>No hay recetas que contengan todo</h3>
+          <p>Quita algún ingrediente, prueba otra combinación o limpia los filtros.</p>
           <button class="button button--soft" id="clear-filters-button" type="button">Limpiar filtros</button>
         </div>
       </div>
@@ -110,9 +118,9 @@
     <section class="future-section">
       <div class="shell future-card">
         <div>
-          <span class="eyebrow">Próximamente</span>
+          <span class="eyebrow">Siguiente evolución</span>
           <h2>De una foto del libro a una receta guardada</h2>
-          <p>La estructura queda preparada para añadir OCR y una IA sencilla que extraiga título, ingredientes y pasos desde una fotografía. También se deja preparado el almacenamiento de imágenes en Supabase.</p>
+          <p>La base de datos y el almacenamiento de fotografías ya están conectados. El siguiente módulo podrá usar OCR y una IA sencilla para extraer título, ingredientes y pasos desde una fotografía antes de revisarlos y guardarlos.</p>
         </div>
         <div class="future-steps" aria-label="Flujo futuro">
           <span>1. Foto</span><b>→</b><span>2. Leer texto</span><b>→</b><span>3. Revisar</span><b>→</b><span>4. Guardar</span>
@@ -125,11 +133,11 @@
     <div class="shell footer-inner">
       <div>
         <strong>Recetario de Javi</strong>
-        <span>Hecho con HTML, CSS y JavaScript · GitHub Pages</span>
+        <span>HTML, CSS, JavaScript y Supabase · GitHub Pages</span>
       </div>
       <div class="version-block">
-        <span>Versión <strong>0.1.0</strong></span>
-        <span>06/08/2026</span>
+        <span>Versión <strong>0.2.0</strong></span>
+        <span>07/08/2026</span>
       </div>
     </div>
   </footer>
@@ -162,16 +170,40 @@
         <label class="field"><span>Cocinado (min)</span><input id="recipe-cook" name="cookMinutes" type="number" min="0" max="1440" value="20"></label>
         <label class="field"><span>Nota</span><input id="recipe-rating" name="rating" type="number" min="0" max="5" step="0.5" value="4"></label>
         <label class="field"><span>Icono</span><input id="recipe-emoji" name="emoji" maxlength="4" value="🍲" aria-describedby="emoji-help"><small id="emoji-help">Un emoji representativo.</small></label>
-        <label class="field"><span>Foto por URL</span><input id="recipe-image" name="imageUrl" type="url" placeholder="https://…"><small>La subida de archivos se activará con Supabase.</small></label>
+        <label class="field"><span>Foto propia</span><input id="recipe-image-file" name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" disabled><small>JPG, PNG o WEBP, máximo 5 MB. Requiere iniciar sesión.</small></label>
+        <label class="field field--wide"><span>Foto por URL</span><input id="recipe-image" name="imageUrl" type="url" placeholder="https://…"><small>Opcional, como alternativa a subir una fotografía.</small></label>
         <label class="field field--wide"><span>Ingredientes *</span><textarea id="recipe-ingredients" name="ingredients" required rows="7" placeholder="Uno por línea. Ej.:&#10;300 g de pollo&#10;2 patatas&#10;1 cebolla"></textarea></label>
         <label class="field field--wide"><span>Pasos *</span><textarea id="recipe-steps" name="steps" required rows="7" placeholder="Un paso por línea."></textarea></label>
         <label class="field field--wide"><span>Notas personales</span><textarea id="recipe-notes" name="notes" rows="3" placeholder="Trucos, cambios o recordatorios para la próxima vez."></textarea></label>
       </div>
 
-      <p class="storage-note">En esta primera versión, las recetas que añadas se guardan solo en este navegador. El script de Supabase incluido permitirá pasarlas después a la base de datos.</p>
+      <p class="storage-note" id="storage-note"><strong>Guardado local.</strong> Inicia sesión para sincronizar las recetas con Supabase.</p>
       <div class="form-actions">
         <button class="button button--soft" type="button" data-close-form>Cancelar</button>
         <button class="button" type="submit">Guardar receta</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="form-dialog auth-dialog" id="auth-dialog" aria-labelledby="auth-dialog-title">
+    <form class="auth-form" id="auth-form">
+      <div class="form-header">
+        <div>
+          <span class="eyebrow">Sincronización privada</span>
+          <h2 id="auth-dialog-title">Acceder a Supabase</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-auth aria-label="Cerrar acceso">×</button>
+      </div>
+      <p class="auth-copy">Inicia sesión para guardar tus recetas y fotografías en la base de datos y consultarlas desde otros dispositivos.</p>
+      <div class="auth-fields">
+        <label class="field"><span>Correo electrónico</span><input id="auth-email" type="email" autocomplete="email" required></label>
+        <label class="field"><span>Contraseña</span><input id="auth-password" type="password" autocomplete="current-password" minlength="6" required></label>
+      </div>
+      <p class="auth-message" id="auth-message" aria-live="polite">Usa la cuenta de tu proyecto Supabase.</p>
+      <p class="cloud-note">Las credenciales se envían directamente a Supabase. La clave administrativa no está incluida en la web.</p>
+      <div class="auth-actions">
+        <button class="button button--soft" id="auth-register-button" type="button">Crear cuenta</button>
+        <button class="button" type="submit">Iniciar sesión</button>
       </div>
     </form>
   </dialog>
