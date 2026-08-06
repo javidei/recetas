@@ -7,11 +7,12 @@
   <meta name="description" content="Cuenta familiar del Recetario de Javi.">
   <title>Mi cuenta · Recetario de Javi</title>
   <link rel="icon" href="assets/recetario.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=0.3.0">
-  <link rel="stylesheet" href="account.css?v=0.3.0">
-  <script defer src="recetario-config.js?v=0.3.0"></script>
-  <script defer src="account-bootstrap.js?v=0.3.0"></script>
-  <script defer src="account.js?v=0.3.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.3.1">
+  <link rel="stylesheet" href="account.css?v=0.3.1">
+  <script defer src="recetario-config.js?v=0.3.1"></script>
+  <script defer src="account-bootstrap.js?v=0.3.1"></script>
+  <script defer src="account-compat.js?v=0.3.1"></script>
+  <script defer src="account.js?v=0.3.1"></script>
 </head>
 <body class="account-page">
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -113,8 +114,8 @@
 
           <p class="account-message" id="family-message" aria-live="polite"></p>
           <div class="migration-warning" id="migration-warning" hidden>
-            <strong>Falta activar las funciones familiares.</strong>
-            <span>Ejecuta el archivo <code>supabase/002_familias.sql</code> en Supabase.</span>
+            <strong>La estructura familiar necesita una reparación.</strong>
+            <span>Ejecuta el archivo <code>supabase/003_reparar_familias.sql</code> en Supabase.</span>
           </div>
         </article>
       </div>
@@ -133,7 +134,7 @@
   <footer class="site-footer">
     <div class="shell footer-inner">
       <div><strong>Recetario de Javi</strong><span>Cuentas privadas y recetas familiares con Supabase</span></div>
-      <div class="version-block"><span>Versión <strong>0.3.0</strong></span><span>07/08/2026</span></div>
+      <div class="version-block"><span>Versión <strong>0.3.1</strong></span><span>07/08/2026</span></div>
     </div>
   </footer>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
