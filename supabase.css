@@ -18,9 +18,9 @@ body[data-cloud-loading="true"] #results-summary::after { content: " · sincroni
 .shared-recipe-note { margin: 0 0 22px; padding: 13px 15px; border: 1px solid rgba(109,127,95,.22); border-radius: 14px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: #43533a; background: #eef3e9; }
 .shared-recipe-note strong,.shared-recipe-note span { display: block; }
 
+@media (max-width: 900px) { .desktop-tools-menu { display: none; } }
 @media (max-width: 820px) { .header-actions { flex-wrap: wrap; justify-content: flex-end; } }
 @media (max-width: 660px) {
-  .desktop-tools-menu { display: none; }
   .header-actions { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .header-actions .button { width: 100%; min-width: 0; padding-inline: 11px; font-size: .86rem; }
 }
