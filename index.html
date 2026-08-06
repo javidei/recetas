@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#8f3d2f">
+  <meta name="description" content="Recetario personal para guardar, buscar y consultar recetas propias por ingredientes.">
+  <title>Recetario de Javi</title>
+  <link rel="icon" href="assets/recetario.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css?v=0.1.0">
+  <script defer src="app.js?v=0.1.0"></script>
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="#inicio" aria-label="Ir al inicio del recetario">
+        <img src="assets/recetario.svg" alt="" width="46" height="46">
+        <span>
+          <strong>Recetario de Javi</strong>
+          <small>Recetas propias, siempre a mano</small>
+        </span>
+      </a>
+      <nav class="header-actions" aria-label="Acciones principales">
+        <button class="button button--soft" id="export-button" type="button">Exportar</button>
+        <button class="button" id="new-recipe-button" type="button">+ Nueva receta</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido">
+    <section class="hero" id="inicio">
+      <div class="shell hero-grid">
+        <div>
+          <span class="eyebrow">Tu cocina, organizada</span>
+          <h1>Encuentra qué cocinar con lo que tienes.</h1>
+          <p class="hero-copy">Guarda recetas propias, consulta ingredientes y pasos, puntúalas y encuéntralas por nombre, categoría o ingredientes.</p>
+
+          <form class="search-panel" id="search-form" role="search">
+            <label for="recipe-search">Buscar receta o ingrediente</label>
+            <div class="search-row">
+              <input id="recipe-search" name="search" type="search" autocomplete="off" placeholder="Ej.: pollo, tomate, pasta…">
+              <button class="button" type="submit">Buscar</button>
+            </div>
+            <div class="quick-filters" aria-label="Ingredientes frecuentes">
+              <button type="button" data-search-chip="pollo">Pollo</button>
+              <button type="button" data-search-chip="patata">Patata</button>
+              <button type="button" data-search-chip="tomate">Tomate</button>
+              <button type="button" data-search-chip="pasta">Pasta</button>
+              <button type="button" data-search-chip="huevo">Huevo</button>
+            </div>
+          </form>
+        </div>
+
+        <aside class="hero-card" aria-label="Resumen del recetario">
+          <img src="assets/recetario.svg" alt="Ilustración de un libro de recetas con un cuenco" width="240" height="240">
+          <div class="hero-stats">
+            <div><strong id="stat-recipes">0</strong><span>recetas</span></div>
+            <div><strong id="stat-favorites">0</strong><span>favoritas</span></div>
+            <div><strong id="stat-quick">0</strong><span>rápidas</span></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="catalog-section" aria-labelledby="catalog-title">
+      <div class="shell">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Colección</span>
+            <h2 id="catalog-title">Mis recetas</h2>
+            <p id="results-summary" aria-live="polite">Cargando recetas…</p>
+          </div>
+          <div class="catalog-controls">
+            <label>
+              <span>Categoría</span>
+              <select id="category-filter">
+                <option value="all">Todas</option>
+                <option value="principal">Platos principales</option>
+                <option value="entrante">Entrantes</option>
+                <option value="postre">Postres</option>
+                <option value="desayuno">Desayunos</option>
+              </select>
+            </label>
+            <label>
+              <span>Ordenar</span>
+              <select id="sort-filter">
+                <option value="featured">Destacadas</option>
+                <option value="rating">Mejor valoradas</option>
+                <option value="time">Más rápidas</option>
+                <option value="newest">Más recientes</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="recipe-grid" id="recipe-grid" aria-live="polite"></div>
+
+        <div class="empty-state" id="empty-state" hidden>
+          <span aria-hidden="true">🥣</span>
+          <h3>No hay recetas que coincidan</h3>
+          <p>Prueba con otro ingrediente o limpia los filtros.</p>
+          <button class="button button--soft" id="clear-filters-button" type="button">Limpiar filtros</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="future-section">
+      <div class="shell future-card">
+        <div>
+          <span class="eyebrow">Próximamente</span>
+          <h2>De una foto del libro a una receta guardada</h2>
+          <p>La estructura queda preparada para añadir OCR y una IA sencilla que extraiga título, ingredientes y pasos desde una fotografía. También se deja preparado el almacenamiento de imágenes en Supabase.</p>
+        </div>
+        <div class="future-steps" aria-label="Flujo futuro">
+          <span>1. Foto</span><b>→</b><span>2. Leer texto</span><b>→</b><span>3. Revisar</span><b>→</b><span>4. Guardar</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div>
+        <strong>Recetario de Javi</strong>
+        <span>Hecho con HTML, CSS y JavaScript · GitHub Pages</span>
+      </div>
+      <div class="version-block">
+        <span>Versión <strong>0.1.0</strong></span>
+        <span>06/08/2026</span>
+      </div>
+    </div>
+  </footer>
+
+  <dialog class="recipe-dialog" id="recipe-dialog" aria-labelledby="recipe-dialog-title">
+    <div class="dialog-shell">
+      <button class="icon-button dialog-close" type="button" data-close-dialog aria-label="Cerrar detalle">×</button>
+      <div id="recipe-detail"></div>
+    </div>
+  </dialog>
+
+  <dialog class="form-dialog" id="form-dialog" aria-labelledby="form-dialog-title">
+    <form class="recipe-form" id="recipe-form" method="dialog">
+      <div class="form-header">
+        <div>
+          <span class="eyebrow">Receta propia</span>
+          <h2 id="form-dialog-title">Nueva receta</h2>
+        </div>
+        <button class="icon-button" type="button" data-close-form aria-label="Cerrar formulario">×</button>
+      </div>
+
+      <input type="hidden" id="recipe-id" name="recipeId">
+      <div class="form-grid">
+        <label class="field field--wide"><span>Nombre *</span><input id="recipe-title" name="title" required maxlength="90" placeholder="Ej.: Pollo al horno de casa"></label>
+        <label class="field field--wide"><span>Descripción breve *</span><textarea id="recipe-summary" name="summary" required rows="2" maxlength="220" placeholder="Una frase para reconocer la receta."></textarea></label>
+        <label class="field"><span>Categoría</span><select id="recipe-category" name="category"><option value="principal">Plato principal</option><option value="entrante">Entrante</option><option value="postre">Postre</option><option value="desayuno">Desayuno</option></select></label>
+        <label class="field"><span>Dificultad</span><select id="recipe-difficulty" name="difficulty"><option>Fácil</option><option>Media</option><option>Difícil</option></select></label>
+        <label class="field"><span>Raciones</span><input id="recipe-servings" name="servings" type="number" min="1" max="30" value="2"></label>
+        <label class="field"><span>Preparación (min)</span><input id="recipe-prep" name="prepMinutes" type="number" min="0" max="1440" value="10"></label>
+        <label class="field"><span>Cocinado (min)</span><input id="recipe-cook" name="cookMinutes" type="number" min="0" max="1440" value="20"></label>
+        <label class="field"><span>Nota</span><input id="recipe-rating" name="rating" type="number" min="0" max="5" step="0.5" value="4"></label>
+        <label class="field"><span>Icono</span><input id="recipe-emoji" name="emoji" maxlength="4" value="🍲" aria-describedby="emoji-help"><small id="emoji-help">Un emoji representativo.</small></label>
+        <label class="field"><span>Foto por URL</span><input id="recipe-image" name="imageUrl" type="url" placeholder="https://…"><small>La subida de archivos se activará con Supabase.</small></label>
+        <label class="field field--wide"><span>Ingredientes *</span><textarea id="recipe-ingredients" name="ingredients" required rows="7" placeholder="Uno por línea. Ej.:&#10;300 g de pollo&#10;2 patatas&#10;1 cebolla"></textarea></label>
+        <label class="field field--wide"><span>Pasos *</span><textarea id="recipe-steps" name="steps" required rows="7" placeholder="Un paso por línea."></textarea></label>
+        <label class="field field--wide"><span>Notas personales</span><textarea id="recipe-notes" name="notes" rows="3" placeholder="Trucos, cambios o recordatorios para la próxima vez."></textarea></label>
+      </div>
+
+      <p class="storage-note">En esta primera versión, las recetas que añadas se guardan solo en este navegador. El script de Supabase incluido permitirá pasarlas después a la base de datos.</p>
+      <div class="form-actions">
+        <button class="button button--soft" type="button" data-close-form>Cancelar</button>
+        <button class="button" type="submit">Guardar receta</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
