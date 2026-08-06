@@ -7,7 +7,10 @@
     const url = typeof input === 'string' ? input : input?.url || '';
     let nextOptions = options;
 
-    if (url.includes('/rest/v1/profiles?on_conflict=id') && String(options.method || 'GET').toUpperCase() === 'POST') {
+    const isRecipeProfileUpsert = /\/rest\/v1\/(?:profiles|recipe_profiles)\?on_conflict=id/.test(url)
+      && String(options.method || 'GET').toUpperCase() === 'POST';
+
+    if (isRecipeProfileUpsert) {
       const headers = new Headers(options.headers || {});
       const prefer = headers.get('Prefer') || '';
       headers.set(
