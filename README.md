@@ -1,38 +1,33 @@
 # Recetario de Javi
 
-Aplicación web responsive para guardar recetas propias y encontrarlas por nombre, categoría o combinando varios ingredientes.
+Aplicación web responsive para guardar recetas propias, buscarlas por varios ingredientes y compartirlas dentro de un grupo familiar privado.
 
 ## Versión actual
 
-**0.2.0 · 07/08/2026**
+**0.3.0 · 07/08/2026**
 
 ## Incluido
 
-- Recetas de ejemplo con ficha completa.
-- Buscador por nombre, descripción, etiquetas y varios ingredientes simultáneos.
-- Búsqueda combinada con comas o `+`, mostrando solo recetas que contengan todos los términos.
-- Filtros por categoría y ordenación.
-- Favoritos y exportación a JSON.
-- Alta, edición y borrado de recetas propias.
-- Acceso mediante Supabase Auth.
-- Persistencia privada en Supabase con políticas RLS.
-- Subida de fotografías JPG, PNG y WEBP al bucket privado `recipe-images`.
-- Migración de las recetas guardadas previamente en `localStorage`.
-- Modo local de respaldo cuando no hay una sesión iniciada.
+- Catálogo inicial con recetas de ejemplo y fichas completas.
+- Buscador que admite varios ingredientes separados por comas, `+` o punto y coma.
+- Filtros, ordenación, favoritos y estadísticas.
+- Alta, edición y borrado de recetas.
+- Guardado local sin cuenta y sincronización con Supabase al iniciar sesión.
+- Subida privada de fotografías.
+- Página independiente de acceso, registro y perfil.
+- Familias privadas mediante código de invitación.
+- Recetas configurables como privadas o compartidas con la familia.
+- Exportación JSON escondida en el menú secundario de escritorio.
 - Diseño responsive, accesible y preparado como PWA.
-- Base preparada para incorporar OCR e IA en una fase posterior.
 
-## Configuración pública
+## Supabase
 
-`recetario-config.js` contiene únicamente la URL de Supabase y la clave publicable. Estas credenciales están diseñadas para ejecutarse en el navegador y quedan limitadas por las políticas RLS de `supabase/001_recetas.sql`.
+Ejecutar los scripts en este orden:
 
-Nunca se debe añadir al repositorio la clave `service_role`.
+1. `supabase/001_recetas.sql`
+2. `supabase/002_familias.sql`
 
-## Persistencia
-
-Con una sesión iniciada, las recetas, ingredientes, pasos y fotografías se guardan en Supabase. Sin sesión, las recetas continúan guardándose en `localStorage` para que la web siga siendo usable.
-
-Al iniciar sesión aparece una acción para migrar las recetas locales existentes a la base de datos.
+El segundo script añade perfiles, familias, miembros, códigos de invitación, visibilidad familiar y nuevas políticas RLS. Las recetas familiares pueden leerlas todos los miembros, pero solo puede editarlas o eliminarlas la persona que las creó.
 
 ## Futuro OCR + IA
 
@@ -43,5 +38,3 @@ Flujo previsto:
 3. Convertirlo a una estructura de receta.
 4. Mostrar una revisión editable.
 5. Guardar la receta y su imagen en Supabase.
-
-Una opción gratuita razonable será usar OCR en el navegador con Tesseract.js y un parser local por reglas. Una IA con cuota gratuita puede utilizarse como mejora opcional para estructurar textos más complejos.
