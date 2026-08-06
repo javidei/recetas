@@ -1,8 +1,9 @@
-const CACHE_NAME = 'recetario-javi-v0.3.0';
+const CACHE_NAME = 'recetario-javi-v0.3.0-1';
 const APP_SHELL = [
   './', './index.html', './cuenta.html',
   './styles.css?v=0.3.0', './supabase.css?v=0.3.0', './account.css?v=0.3.0',
-  './recetario-config.js?v=0.3.0', './app.js?v=0.3.0', './supabase-sync.js?v=0.3.0', './account.js?v=0.3.0',
+  './recetario-config.js?v=0.3.0', './app.js?v=0.3.0', './supabase-sync.js?v=0.3.0',
+  './account-bootstrap.js?v=0.3.0', './account.js?v=0.3.0',
   './manifest.webmanifest', './assets/recetario.svg'
 ];
 
