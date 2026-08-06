@@ -1,5 +1,15 @@
-const CACHE_NAME = 'recetario-javi-v0.1.0';
-const APP_SHELL = ['./', './index.html', './styles.css?v=0.1.0', './app.js?v=0.1.0', './manifest.webmanifest', './assets/recetario.svg'];
+const CACHE_NAME = 'recetario-javi-v0.2.0';
+const APP_SHELL = [
+  './',
+  './index.html',
+  './styles.css?v=0.2.0',
+  './supabase.css?v=0.2.0',
+  './recetario-config.js?v=0.2.0',
+  './app.js?v=0.2.0',
+  './supabase-sync.js?v=0.2.0',
+  './manifest.webmanifest',
+  './assets/recetario.svg'
+];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
