@@ -1,7 +1,7 @@
--- Recetario de Javi · reparación de perfiles y familias
+-- Recetario de Javi · reparación completa de perfiles y familias
 -- Ejecutar después de 002_familias.sql.
 -- Esta migración evita colisiones con la tabla genérica public.profiles
--- utilizada por otros proyectos del mismo Supabase.
+-- utilizada por otros proyectos del mismo Supabase y completa todos los permisos.
 
 create extension if not exists pgcrypto;
 
@@ -42,7 +42,6 @@ create table if not exists public.recipe_family_members (
   unique (user_id)
 );
 
--- Asegura que los perfiles necesarios existan antes de cambiar las claves externas.
 insert into public.recipe_profiles (id, display_name)
 select distinct family.owner_id, 'Familiar'
 from public.recipe_families family
@@ -71,6 +70,10 @@ alter table public.recipes
   add column if not exists family_id uuid references public.recipe_families(id) on delete set null;
 alter table public.recipes
   add column if not exists visibility text not null default 'private';
+
+update public.recipes
+set visibility = case when is_public then 'public' else 'private' end
+where visibility is null;
 
 alter table public.recipes drop constraint if exists recipes_visibility_check;
 alter table public.recipes add constraint recipes_visibility_check
@@ -213,9 +216,34 @@ begin
 end;
 $$;
 
+create or replace function public.can_read_recipe_image(target_path text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.recipes recipe
+    where recipe.cover_image_path = target_path
+      and (
+        recipe.owner_id = auth.uid()
+        or recipe.visibility = 'public'
+        or (
+          recipe.visibility = 'family'
+          and public.is_recipe_family_member(recipe.family_id)
+        )
+      )
+  );
+$$;
+
 alter table public.recipe_profiles enable row level security;
 alter table public.recipe_families enable row level security;
 alter table public.recipe_family_members enable row level security;
+alter table public.recipes enable row level security;
+alter table public.recipe_ingredients enable row level security;
+alter table public.recipe_steps enable row level security;
 
 drop policy if exists "Authenticated users read recipe profiles" on public.recipe_profiles;
 create policy "Authenticated users read recipe profiles"
@@ -254,6 +282,161 @@ create policy "Owners manage recipe family members"
 on public.recipe_family_members for delete to authenticated
 using (public.is_recipe_family_owner(family_id) and role <> 'owner');
 
+drop policy if exists "Public recipes are readable" on public.recipes;
+drop policy if exists "Owners can create recipes" on public.recipes;
+drop policy if exists "Owners can update recipes" on public.recipes;
+drop policy if exists "Owners can delete recipes" on public.recipes;
+drop policy if exists "Accessible recipes are readable" on public.recipes;
+drop policy if exists "Owners create accessible recipes" on public.recipes;
+drop policy if exists "Owners update their recipes" on public.recipes;
+drop policy if exists "Owners delete their recipes" on public.recipes;
+
+create policy "Accessible recipes are readable"
+on public.recipes for select
+using (
+  owner_id = auth.uid()
+  or visibility = 'public'
+  or (
+    visibility = 'family'
+    and public.is_recipe_family_member(family_id)
+  )
+);
+
+create policy "Owners create accessible recipes"
+on public.recipes for insert to authenticated
+with check (
+  owner_id = auth.uid()
+  and (
+    visibility in ('private', 'public')
+    or (
+      visibility = 'family'
+      and public.is_recipe_family_member(family_id)
+    )
+  )
+);
+
+create policy "Owners update their recipes"
+on public.recipes for update to authenticated
+using (owner_id = auth.uid())
+with check (
+  owner_id = auth.uid()
+  and (
+    visibility in ('private', 'public')
+    or (
+      visibility = 'family'
+      and public.is_recipe_family_member(family_id)
+    )
+  )
+);
+
+create policy "Owners delete their recipes"
+on public.recipes for delete to authenticated
+using (owner_id = auth.uid());
+
+drop policy if exists "Ingredients follow recipe access" on public.recipe_ingredients;
+drop policy if exists "Owners manage ingredients" on public.recipe_ingredients;
+drop policy if exists "Accessible ingredients are readable" on public.recipe_ingredients;
+drop policy if exists "Owners manage recipe ingredients" on public.recipe_ingredients;
+
+create policy "Accessible ingredients are readable"
+on public.recipe_ingredients for select
+using (exists (
+  select 1
+  from public.recipes recipe
+  where recipe.id = recipe_id
+    and (
+      recipe.owner_id = auth.uid()
+      or recipe.visibility = 'public'
+      or (
+        recipe.visibility = 'family'
+        and public.is_recipe_family_member(recipe.family_id)
+      )
+    )
+));
+
+create policy "Owners manage recipe ingredients"
+on public.recipe_ingredients for all to authenticated
+using (exists (
+  select 1 from public.recipes recipe
+  where recipe.id = recipe_id and recipe.owner_id = auth.uid()
+))
+with check (exists (
+  select 1 from public.recipes recipe
+  where recipe.id = recipe_id and recipe.owner_id = auth.uid()
+));
+
+drop policy if exists "Steps follow recipe access" on public.recipe_steps;
+drop policy if exists "Owners manage steps" on public.recipe_steps;
+drop policy if exists "Accessible steps are readable" on public.recipe_steps;
+drop policy if exists "Owners manage recipe steps" on public.recipe_steps;
+
+create policy "Accessible steps are readable"
+on public.recipe_steps for select
+using (exists (
+  select 1
+  from public.recipes recipe
+  where recipe.id = recipe_id
+    and (
+      recipe.owner_id = auth.uid()
+      or recipe.visibility = 'public'
+      or (
+        recipe.visibility = 'family'
+        and public.is_recipe_family_member(recipe.family_id)
+      )
+    )
+));
+
+create policy "Owners manage recipe steps"
+on public.recipe_steps for all to authenticated
+using (exists (
+  select 1 from public.recipes recipe
+  where recipe.id = recipe_id and recipe.owner_id = auth.uid()
+))
+with check (exists (
+  select 1 from public.recipes recipe
+  where recipe.id = recipe_id and recipe.owner_id = auth.uid()
+));
+
+drop policy if exists "Users can read their recipe images" on storage.objects;
+drop policy if exists "Users can upload their recipe images" on storage.objects;
+drop policy if exists "Users can update their recipe images" on storage.objects;
+drop policy if exists "Users can delete their recipe images" on storage.objects;
+drop policy if exists "Recipe image readers" on storage.objects;
+drop policy if exists "Recipe image owners upload" on storage.objects;
+drop policy if exists "Recipe image owners update" on storage.objects;
+drop policy if exists "Recipe image owners delete" on storage.objects;
+
+create policy "Recipe image readers"
+on storage.objects for select
+using (
+  bucket_id = 'recipe-images'
+  and (
+    (storage.foldername(name))[1] = auth.uid()::text
+    or public.can_read_recipe_image(name)
+  )
+);
+
+create policy "Recipe image owners upload"
+on storage.objects for insert to authenticated
+with check (
+  bucket_id = 'recipe-images'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+create policy "Recipe image owners update"
+on storage.objects for update to authenticated
+using (
+  bucket_id = 'recipe-images'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+create policy "Recipe image owners delete"
+on storage.objects for delete to authenticated
+using (
+  bucket_id = 'recipe-images'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
 grant select, insert, update on public.recipe_profiles to authenticated;
 grant select, insert, update, delete on public.recipe_families to authenticated;
 grant select, insert, update, delete on public.recipe_family_members to authenticated;
@@ -261,6 +444,7 @@ grant execute on function public.is_recipe_family_member(uuid) to authenticated;
 grant execute on function public.is_recipe_family_owner(uuid) to authenticated;
 grant execute on function public.create_recipe_family(text) to authenticated;
 grant execute on function public.join_recipe_family(text) to authenticated;
+grant execute on function public.can_read_recipe_image(text) to authenticated;
 
 -- Fuerza a PostgREST a refrescar inmediatamente tablas, columnas y funciones nuevas.
 notify pgrst, 'reload schema';
