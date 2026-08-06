@@ -1,0 +1,13 @@
+{
+  "name": "Recetario de Javi",
+  "short_name": "Recetario",
+  "description": "Recetas propias, buscador por ingredientes y fichas detalladas.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffaf2",
+  "theme_color": "#8f3d2f",
+  "icons": [
+    { "src": "assets/recetario.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
