@@ -4,6 +4,6 @@
 window.RECETARIO_CONFIG = Object.freeze({
   supabaseUrl: 'https://avboupigkstzprrgvlhr.supabase.co',
   supabasePublishableKey: 'sb_publishable_eyFLhKFk9HXAab4q1cxG4A_-_la1-OI',
-  version: '0.3.0',
+  version: '0.3.1',
   releaseDate: '07/08/2026'
 });
