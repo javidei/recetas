@@ -2,53 +2,45 @@
   'use strict';
 
   const config = window.RECETARIO_CONFIG;
-  if (!config?.supabaseUrl || !config?.supabasePublishableKey) {
-    console.warn('Recetario: falta la configuración pública de Supabase.');
-    return;
-  }
+  if (!config?.supabaseUrl || !config?.supabasePublishableKey) return;
 
   const SESSION_KEY = 'recetario-javi-supabase-session-v1';
   const LOCAL_MODE = 'local';
   const REMOTE_MODE = 'remote';
   const SEARCH_SEPARATOR = /[,;+\n]+/;
 
-  const authDialog = document.querySelector('#auth-dialog');
-  const authForm = document.querySelector('#auth-form');
-  const authEmail = document.querySelector('#auth-email');
-  const authPassword = document.querySelector('#auth-password');
-  const authMessage = document.querySelector('#auth-message');
-  const authButton = document.querySelector('#auth-button');
-  const logoutButton = document.querySelector('#logout-button');
-  const registerButton = document.querySelector('#auth-register-button');
-  const syncLocalButton = document.querySelector('#sync-local-button');
+  const accountButton = document.querySelector('#account-button');
   const storageNote = document.querySelector('#storage-note');
   const imageFileInput = document.querySelector('#recipe-image-file');
+  const visibilitySelect = document.querySelector('#recipe-visibility');
+  const visibilityHelp = document.querySelector('#recipe-visibility-help');
   const activeTerms = document.querySelector('#active-search-terms');
   const quickFilters = document.querySelector('.quick-filters');
 
   let session = readSession();
   let remoteRecipes = [];
+  let currentFamily = null;
+  let familySchemaReady = true;
   let busy = false;
 
   const originalOpenForm = openForm;
   const originalDeleteRecipe = deleteRecipe;
+  const originalRecipeCard = recipeCard;
+  const originalDetailTemplate = detailTemplate;
+  const originalRender = render;
 
-  userRecipes = userRecipes.map(recipe => ({ ...recipe, storageMode: recipe.storageMode || LOCAL_MODE }));
+  userRecipes = userRecipes.map(recipe => ({ ...recipe, storageMode: recipe.storageMode || LOCAL_MODE, canEdit: true }));
 
   function readSession() {
-    try {
-      const value = localStorage.getItem(SESSION_KEY);
-      return value ? JSON.parse(value) : null;
-    } catch {
-      return null;
-    }
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
+    catch { return null; }
   }
 
-  function storeSession(nextSession) {
-    session = nextSession;
-    if (nextSession) localStorage.setItem(SESSION_KEY, JSON.stringify(nextSession));
+  function storeSession(value) {
+    session = value;
+    if (value) localStorage.setItem(SESSION_KEY, JSON.stringify(value));
     else localStorage.removeItem(SESSION_KEY);
-    updateAuthUi();
+    updateAccountUi();
   }
 
   function normalizeSession(payload) {
@@ -62,37 +54,8 @@
     };
   }
 
-  async function ensureSession() {
-    if (!session?.access_token) return null;
-    const stillValid = Number(session.expires_at || 0) > Math.floor(Date.now() / 1000) + 90;
-    if (stillValid) return session;
-    if (!session.refresh_token) {
-      await clearCloudState();
-      return null;
-    }
-
-    try {
-      const response = await fetch(`${config.supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
-        method: 'POST',
-        headers: baseHeaders(false),
-        body: JSON.stringify({ refresh_token: session.refresh_token })
-      });
-      if (!response.ok) throw new Error(await responseMessage(response));
-      const refreshed = normalizeSession(await response.json());
-      storeSession(refreshed);
-      return refreshed;
-    } catch (error) {
-      console.warn('No se pudo renovar la sesión:', error);
-      await clearCloudState();
-      return null;
-    }
-  }
-
   function baseHeaders(withAuth = true) {
-    const headers = {
-      apikey: config.supabasePublishableKey,
-      'Content-Type': 'application/json'
-    };
+    const headers = { apikey: config.supabasePublishableKey, 'Content-Type': 'application/json' };
     if (withAuth) headers.Authorization = `Bearer ${session?.access_token || config.supabasePublishableKey}`;
     return headers;
   }
@@ -101,8 +64,23 @@
     try {
       const payload = await response.clone().json();
       return payload.msg || payload.message || payload.error_description || payload.error || `Error ${response.status}`;
+    } catch { return `Error ${response.status}`; }
+  }
+
+  async function ensureSession() {
+    if (!session?.access_token) return null;
+    if (Number(session.expires_at || 0) > Math.floor(Date.now() / 1000) + 90) return session;
+    if (!session.refresh_token) { await clearCloudState(); return null; }
+    try {
+      const response = await fetch(`${config.supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST', headers: baseHeaders(false), body: JSON.stringify({ refresh_token: session.refresh_token })
+      });
+      if (!response.ok) throw new Error(await responseMessage(response));
+      storeSession(normalizeSession(await response.json()));
+      return session;
     } catch {
-      return `Error ${response.status}`;
+      await clearCloudState();
+      return null;
     }
   }
 
@@ -110,12 +88,13 @@
     await ensureSession();
     const response = await fetch(`${config.supabaseUrl}/rest/v1/${path}`, {
       ...options,
-      headers: {
-        ...baseHeaders(true),
-        ...(options.headers || {})
-      }
+      headers: { ...baseHeaders(true), ...(options.headers || {}) }
     });
-    if (!response.ok) throw new Error(await responseMessage(response));
+    if (!response.ok) {
+      const error = new Error(await responseMessage(response));
+      error.status = response.status;
+      throw error;
+    }
     if (response.status === 204) return null;
     const text = await response.text();
     return text ? JSON.parse(text) : null;
@@ -126,43 +105,29 @@
   }
 
   function persistLocalOnly() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(localOnlyRecipes().map(({ storageMode, remoteOwnerId, coverImagePath, ...recipe }) => recipe)));
+    const clean = localOnlyRecipes().map(({ storageMode, remoteOwnerId, coverImagePath, familyId, visibility, ownerName, canEdit, ...recipe }) => recipe);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
   }
 
   function splitSearchTerms(value) {
-    return [...new Set(String(value || '')
-      .split(SEARCH_SEPARATOR)
-      .map(term => normalizeText(term))
-      .filter(Boolean))];
+    return [...new Set(String(value || '').split(SEARCH_SEPARATOR).map(term => normalizeText(term)).filter(Boolean))];
   }
 
   function renderSearchTerms() {
     if (!activeTerms) return;
     const terms = splitSearchTerms(els.search.value);
     activeTerms.hidden = terms.length === 0;
-    activeTerms.innerHTML = terms.map(term => `
-      <button type="button" data-remove-search-term="${escapeHtml(term)}" aria-label="Quitar ingrediente ${escapeHtml(term)}">
-        <span>${escapeHtml(term)}</span><b aria-hidden="true">×</b>
-      </button>`).join('');
+    activeTerms.innerHTML = terms.map(term => `<button type="button" data-remove-search-term="${escapeHtml(term)}" aria-label="Quitar ingrediente ${escapeHtml(term)}"><span>${escapeHtml(term)}</span><b aria-hidden="true">×</b></button>`).join('');
   }
 
   getFilteredRecipes = function enhancedGetFilteredRecipes() {
     const terms = splitSearchTerms(els.search.value);
     const category = els.category.value;
     const sort = els.sort.value;
-
     const recipes = allRecipes().filter(recipe => {
-      const haystack = normalizeText([
-        recipe.title,
-        recipe.summary,
-        recipe.categoryLabel,
-        ...(recipe.ingredients || []),
-        ...(recipe.tags || [])
-      ].join(' '));
-      const matchesEveryTerm = terms.length === 0 || terms.every(term => haystack.includes(term));
-      return matchesEveryTerm && (category === 'all' || recipe.category === category);
+      const haystack = normalizeText([recipe.title, recipe.summary, recipe.categoryLabel, ...(recipe.ingredients || []), ...(recipe.tags || [])].join(' '));
+      return (terms.length === 0 || terms.every(term => haystack.includes(term))) && (category === 'all' || recipe.category === category);
     });
-
     const sorters = {
       rating: (a, b) => Number(b.rating) - Number(a.rating),
       time: (a, b) => totalMinutes(a) - totalMinutes(b),
@@ -172,16 +137,34 @@
     return recipes.sort(sorters[sort] || sorters.featured);
   };
 
-  const originalRender = render;
+  recipeCard = function familyRecipeCard(recipe) {
+    const html = originalRecipeCard(recipe);
+    if (recipe.visibility !== 'family') return html;
+    return html.replace(
+      `<div class="recipe-kicker"><span>${escapeHtml(recipe.categoryLabel || categoryLabel(recipe.category))}</span>`,
+      `<div class="recipe-kicker"><span>${escapeHtml(recipe.categoryLabel || categoryLabel(recipe.category))} · <b class="family-label">Familia</b></span>`
+    );
+  };
+
+  detailTemplate = function familyDetailTemplate(recipe) {
+    let html = originalDetailTemplate(recipe);
+    if (recipe.canEdit === false) {
+      html = html.replace(/<button class="button button--soft" type="button" data-edit-recipe[\s\S]*?<\/button><button class="button button--danger"[\s\S]*?<\/button>/, '');
+    }
+    const sharing = recipe.visibility === 'family'
+      ? `<div class="shared-recipe-note"><strong>Receta familiar</strong><span>${recipe.ownerName ? `Compartida por ${escapeHtml(recipe.ownerName)}` : 'Compartida con tu familia'}</span></div>`
+      : '';
+    return html.replace('<div class="detail-content">', `<div class="detail-content">${sharing}`);
+  };
+
   render = function enhancedRender() {
     originalRender();
     renderSearchTerms();
-    updateSyncButton();
   };
 
-  function appendSearchIngredient(ingredient) {
+  function appendSearchIngredient(value) {
     const terms = splitSearchTerms(els.search.value);
-    const normalized = normalizeText(ingredient);
+    const normalized = normalizeText(value);
     if (!terms.includes(normalized)) terms.push(normalized);
     els.search.value = terms.join(', ');
     render();
@@ -196,9 +179,6 @@
     appendSearchIngredient(button.dataset.searchChip);
   }, true);
 
-  els.search.addEventListener('input', renderSearchTerms);
-  document.querySelector('#clear-filters-button')?.addEventListener('click', renderSearchTerms);
-
   activeTerms?.addEventListener('click', event => {
     const button = event.target.closest('[data-remove-search-term]');
     if (!button) return;
@@ -208,96 +188,60 @@
     els.search.focus();
   });
 
-  function updateAuthUi() {
-    const loggedIn = Boolean(session?.user?.id);
-    const email = session?.user?.email || '';
-    if (authButton) {
-      authButton.hidden = loggedIn;
-      authButton.textContent = 'Acceder';
-    }
-    if (logoutButton) {
-      logoutButton.hidden = !loggedIn;
-      logoutButton.textContent = email ? `Salir · ${email.split('@')[0]}` : 'Cerrar sesión';
-      logoutButton.title = email ? `Sesión iniciada como ${email}` : '';
+  function updateAccountUi() {
+    const logged = Boolean(session?.user?.id);
+    if (accountButton) {
+      accountButton.textContent = logged ? 'Mi cuenta' : 'Acceder';
+      accountButton.title = logged && session.user.email ? `Cuenta: ${session.user.email}` : '';
+      accountButton.classList.toggle('is-logged-in', logged);
     }
     if (storageNote) {
-      storageNote.innerHTML = loggedIn
-        ? '<strong>Guardado en la nube activo.</strong> Las nuevas recetas y cambios se sincronizan con Supabase. Las fotos se almacenan de forma privada.'
-        : '<strong>Guardado local.</strong> Inicia sesión para guardar recetas y fotos en Supabase y tenerlas disponibles en otros dispositivos.';
+      storageNote.innerHTML = logged
+        ? currentFamily
+          ? '<strong>Guardado en la nube.</strong> Elige si esta receta será privada o visible para tu familia.'
+          : '<strong>Guardado en la nube.</strong> Crea o únete a una familia desde Mi cuenta para compartir recetas.'
+        : '<strong>Guardado local.</strong> Accede a tu cuenta para sincronizar y compartir recetas.';
     }
-    if (imageFileInput) imageFileInput.disabled = !loggedIn;
-    updateSyncButton();
+    if (imageFileInput) imageFileInput.disabled = !logged;
+    updateVisibilityControl();
   }
 
-  function updateSyncButton() {
-    if (!syncLocalButton) return;
-    const count = localOnlyRecipes().length;
-    syncLocalButton.hidden = !session?.user?.id || count === 0;
-    syncLocalButton.textContent = count === 1 ? 'Subir 1 receta local' : `Subir ${count} recetas locales`;
-  }
-
-  function setAuthMessage(message, isError = false) {
-    if (!authMessage) return;
-    authMessage.textContent = message;
-    authMessage.dataset.error = String(isError);
-  }
-
-  async function authenticate(mode) {
-    if (busy || !authForm?.reportValidity()) return;
-    busy = true;
-    setAuthMessage(mode === 'signup' ? 'Creando cuenta…' : 'Iniciando sesión…');
-    const endpoint = mode === 'signup' ? '/auth/v1/signup' : '/auth/v1/token?grant_type=password';
-
-    try {
-      const response = await fetch(`${config.supabaseUrl}${endpoint}`, {
-        method: 'POST',
-        headers: baseHeaders(false),
-        body: JSON.stringify({ email: authEmail.value.trim(), password: authPassword.value })
-      });
-      if (!response.ok) throw new Error(await responseMessage(response));
-      const payload = await response.json();
-      const nextSession = normalizeSession(payload);
-      if (!nextSession) {
-        setAuthMessage('Cuenta creada. Revisa tu correo para confirmar el acceso antes de iniciar sesión.');
-        return;
-      }
-      storeSession(nextSession);
-      authDialog.close();
-      authForm.reset();
-      showToast('Sesión iniciada. Cargando tus recetas…');
-      await loadRemoteRecipes();
-    } catch (error) {
-      setAuthMessage(error.message || 'No se pudo completar el acceso.', true);
-    } finally {
-      busy = false;
-    }
-  }
-
-  async function logout() {
-    if (busy) return;
-    busy = true;
-    try {
-      if (session?.access_token) {
-        await fetch(`${config.supabaseUrl}/auth/v1/logout`, {
-          method: 'POST',
-          headers: baseHeaders(true)
-        });
-      }
-    } catch {
-      // La sesión local se elimina aunque Supabase no responda.
-    } finally {
-      await clearCloudState();
-      busy = false;
-      showToast('Sesión cerrada. Se muestran las recetas guardadas en este navegador.');
-    }
+  function updateVisibilityControl(recipe = null) {
+    if (!visibilitySelect) return;
+    const familyOption = visibilitySelect.querySelector('option[value="family"]');
+    const enabled = Boolean(session?.user?.id && currentFamily?.id && familySchemaReady);
+    if (familyOption) familyOption.disabled = !enabled;
+    if (!enabled && visibilitySelect.value === 'family') visibilitySelect.value = 'private';
+    if (recipe) visibilitySelect.value = recipe.visibility === 'family' && enabled ? 'family' : 'private';
+    if (visibilityHelp) visibilityHelp.textContent = enabled
+      ? `Las recetas familiares serán visibles para ${currentFamily.name}.`
+      : 'Crea o únete a una familia desde Mi cuenta.';
   }
 
   async function clearCloudState() {
     storeSession(null);
+    currentFamily = null;
     remoteRecipes = [];
-    const locals = readJson(STORAGE_KEY, []).map(recipe => ({ ...recipe, storageMode: LOCAL_MODE }));
-    userRecipes = locals;
+    userRecipes = readJson(STORAGE_KEY, []).map(recipe => ({ ...recipe, storageMode: LOCAL_MODE, canEdit: true }));
+    updateAccountUi();
     render();
+  }
+
+  async function loadCurrentFamily() {
+    currentFamily = null;
+    familySchemaReady = true;
+    if (!session?.user?.id) return;
+    try {
+      const memberships = await restRequest(`recipe_family_members?user_id=eq.${encodeURIComponent(session.user.id)}&select=family_id,role&limit=1`);
+      const membership = memberships?.[0];
+      if (!membership) return;
+      const rows = await restRequest(`recipe_families?id=eq.${encodeURIComponent(membership.family_id)}&select=id,name&limit=1`);
+      if (rows?.[0]) currentFamily = { ...rows[0], role: membership.role };
+    } catch (error) {
+      if (error.status === 404 || /recipe_famil/i.test(error.message)) familySchemaReady = false;
+      else console.warn('No se pudo leer la familia:', error);
+    }
+    updateAccountUi();
   }
 
   function encodeObjectPath(path) {
@@ -308,24 +252,16 @@
     if (!path) return '';
     if (/^https?:\/\//i.test(path)) return path;
     try {
-      await ensureSession();
       const response = await fetch(`${config.supabaseUrl}/storage/v1/object/sign/recipe-images/${encodeObjectPath(path)}`, {
-        method: 'POST',
-        headers: baseHeaders(true),
-        body: JSON.stringify({ expiresIn: 3600 })
+        method: 'POST', headers: baseHeaders(true), body: JSON.stringify({ expiresIn: 3600 })
       });
       if (!response.ok) throw new Error(await responseMessage(response));
       const payload = await response.json();
-      if (!payload.signedURL) return '';
-      return `${config.supabaseUrl}/storage/v1${payload.signedURL}`;
-    } catch (error) {
-      console.warn('No se pudo firmar la imagen:', error);
-      return '';
-    }
+      return payload.signedURL ? `${config.supabaseUrl}/storage/v1${payload.signedURL}` : '';
+    } catch { return ''; }
   }
 
-  async function mapRemoteRecipe(row, ingredients = row.recipe_ingredients || [], steps = row.recipe_steps || []) {
-    const imageUrl = await signedImageUrl(row.cover_image_path);
+  async function mapRemoteRecipe(row, names, ingredients = row.recipe_ingredients || [], steps = row.recipe_steps || []) {
     return {
       id: row.id,
       title: row.title,
@@ -338,7 +274,7 @@
       cookMinutes: Number(row.cook_minutes || 0),
       rating: Number(row.rating || 0),
       emoji: row.emoji || '🍲',
-      imageUrl,
+      imageUrl: await signedImageUrl(row.cover_image_path),
       coverImagePath: row.cover_image_path || '',
       ingredients: [...ingredients].sort((a, b) => Number(a.position) - Number(b.position)).map(item => item.ingredient_text),
       steps: [...steps].sort((a, b) => Number(a.position) - Number(b.position)).map(item => item.instruction),
@@ -348,33 +284,48 @@
       createdAt: String(row.created_at || '').slice(0, 10),
       userCreated: true,
       storageMode: REMOTE_MODE,
-      remoteOwnerId: row.owner_id
+      remoteOwnerId: row.owner_id,
+      ownerName: names.get(row.owner_id) || (row.owner_id === session.user.id ? session.user.email?.split('@')[0] : ''),
+      visibility: row.visibility || (row.is_public ? 'public' : 'private'),
+      familyId: row.family_id || null,
+      canEdit: row.owner_id === session.user.id
     };
   }
 
-  async function loadRemoteRecipes() {
-    const activeSession = await ensureSession();
-    if (!activeSession?.user?.id) return;
+  async function loadOwnerNames(rows) {
+    const names = new Map();
+    if (!familySchemaReady) return names;
+    const ids = [...new Set(rows.map(row => row.owner_id).filter(Boolean))];
+    if (!ids.length) return names;
+    try {
+      const profiles = await restRequest(`profiles?id=in.(${ids.join(',')})&select=id,display_name`);
+      (profiles || []).forEach(item => names.set(item.id, item.display_name));
+    } catch { /* Los nombres son opcionales. */ }
+    return names;
+  }
 
+  async function loadRemoteRecipes() {
+    const active = await ensureSession();
+    if (!active?.user?.id) return;
     try {
       document.body.dataset.cloudLoading = 'true';
-      const owner = encodeURIComponent(activeSession.user.id);
-      const rows = await restRequest(`recipes?owner_id=eq.${owner}&select=*,recipe_ingredients(id,position,ingredient_text),recipe_steps(id,position,instruction)&order=created_at.desc`);
-      remoteRecipes = await Promise.all((rows || []).map(row => mapRemoteRecipe(row)));
-      const locals = readJson(STORAGE_KEY, []).map(recipe => ({ ...recipe, storageMode: LOCAL_MODE }));
+      await loadCurrentFamily();
+      const select = '*,recipe_ingredients(id,position,ingredient_text),recipe_steps(id,position,instruction)';
+      const filter = familySchemaReady ? '' : `owner_id=eq.${encodeURIComponent(active.user.id)}&`;
+      const rows = await restRequest(`recipes?${filter}select=${select}&order=created_at.desc`);
+      const names = await loadOwnerNames(rows || []);
+      remoteRecipes = await Promise.all((rows || []).map(row => mapRemoteRecipe(row, names)));
+      const locals = readJson(STORAGE_KEY, []).map(recipe => ({ ...recipe, storageMode: LOCAL_MODE, canEdit: true }));
       userRecipes = [...remoteRecipes, ...locals];
       render();
-      showToast(remoteRecipes.length ? `${remoteRecipes.length} recetas cargadas desde Supabase` : 'Supabase conectado. Aún no tienes recetas guardadas en la nube.');
     } catch (error) {
       console.error(error);
       showToast(`No se pudieron cargar las recetas: ${error.message}`);
-    } finally {
-      delete document.body.dataset.cloudLoading;
-    }
+    } finally { delete document.body.dataset.cloudLoading; }
   }
 
   function recipePayload(recipe, coverImagePath) {
-    return {
+    const payload = {
       owner_id: session.user.id,
       title: recipe.title,
       summary: recipe.summary || '',
@@ -390,6 +341,12 @@
       tags: recipe.tags || [],
       is_public: false
     };
+    if (familySchemaReady) {
+      const share = recipe.visibility === 'family' && currentFamily?.id;
+      payload.visibility = share ? 'family' : 'private';
+      payload.family_id = share ? currentFamily.id : null;
+    }
+    return payload;
   }
 
   function safeFileName(name) {
@@ -402,16 +359,10 @@
     if (!file || !session?.user?.id) return '';
     if (file.size > 5 * 1024 * 1024) throw new Error('La foto supera el límite de 5 MB.');
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Usa una imagen JPG, PNG o WEBP.');
-
     const path = `${session.user.id}/${recipeId}/${Date.now()}-${safeFileName(file.name)}`;
     const response = await fetch(`${config.supabaseUrl}/storage/v1/object/recipe-images/${encodeObjectPath(path)}`, {
       method: 'POST',
-      headers: {
-        apikey: config.supabasePublishableKey,
-        Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': file.type,
-        'x-upsert': 'true'
-      },
+      headers: { apikey: config.supabasePublishableKey, Authorization: `Bearer ${session.access_token}`, 'Content-Type': file.type, 'x-upsert': 'true' },
       body: file
     });
     if (!response.ok) throw new Error(await responseMessage(response));
@@ -422,89 +373,55 @@
     if (!path || /^https?:\/\//i.test(path) || !session?.access_token) return;
     try {
       await fetch(`${config.supabaseUrl}/storage/v1/object/recipe-images/${encodeObjectPath(path)}`, {
-        method: 'DELETE',
-        headers: {
-          apikey: config.supabasePublishableKey,
-          Authorization: `Bearer ${session.access_token}`
-        }
+        method: 'DELETE', headers: { apikey: config.supabasePublishableKey, Authorization: `Bearer ${session.access_token}` }
       });
-    } catch {
-      // La receta puede eliminarse aunque falle la limpieza del archivo.
-    }
+    } catch { /* La receta puede eliminarse aunque falle la imagen. */ }
   }
 
-  async function replaceRecipeChildren(recipeId, recipe) {
+  async function replaceChildren(recipeId, recipe) {
     await restRequest(`recipe_ingredients?recipe_id=eq.${encodeURIComponent(recipeId)}`, { method: 'DELETE' });
     await restRequest(`recipe_steps?recipe_id=eq.${encodeURIComponent(recipeId)}`, { method: 'DELETE' });
-
-    if (recipe.ingredients.length) {
-      await restRequest('recipe_ingredients', {
-        method: 'POST',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify(recipe.ingredients.map((ingredient, position) => ({
-          recipe_id: recipeId,
-          position,
-          ingredient_text: ingredient
-        })))
-      });
-    }
-
-    if (recipe.steps.length) {
-      await restRequest('recipe_steps', {
-        method: 'POST',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify(recipe.steps.map((instruction, position) => ({
-          recipe_id: recipeId,
-          position,
-          instruction
-        })))
-      });
-    }
+    if (recipe.ingredients.length) await restRequest('recipe_ingredients', {
+      method: 'POST', headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify(recipe.ingredients.map((ingredient_text, position) => ({ recipe_id: recipeId, position, ingredient_text })))
+    });
+    if (recipe.steps.length) await restRequest('recipe_steps', {
+      method: 'POST', headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify(recipe.steps.map((instruction, position) => ({ recipe_id: recipeId, position, instruction })))
+    });
   }
 
   async function saveRemoteRecipe(recipe, existing = null, file = null) {
-    await ensureSession();
-    if (!session?.user?.id) throw new Error('Inicia sesión para guardar en Supabase.');
-
-    let row;
+    if (!session?.user?.id) throw new Error('Accede a tu cuenta para guardar en Supabase.');
     let coverImagePath = existing?.coverImagePath || '';
     const externalUrl = String(recipe.imageUrl || '').trim();
-    if (externalUrl && (!existing?.imageUrl || externalUrl !== existing.imageUrl)) coverImagePath = externalUrl;
-
+    if (externalUrl && externalUrl !== existing?.imageUrl) coverImagePath = externalUrl;
+    const ownerFilter = `owner_id=eq.${encodeURIComponent(session.user.id)}`;
+    let rows;
     if (existing?.storageMode === REMOTE_MODE) {
-      const [updated] = await restRequest(`recipes?id=eq.${encodeURIComponent(existing.id)}&owner_id=eq.${encodeURIComponent(session.user.id)}`, {
-        method: 'PATCH',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify(recipePayload(recipe, coverImagePath))
+      rows = await restRequest(`recipes?id=eq.${encodeURIComponent(existing.id)}&${ownerFilter}`, {
+        method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(recipePayload(recipe, coverImagePath))
       });
-      row = updated;
     } else {
-      const [inserted] = await restRequest('recipes', {
-        method: 'POST',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify(recipePayload(recipe, coverImagePath))
+      rows = await restRequest('recipes', {
+        method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(recipePayload(recipe, coverImagePath))
       });
-      row = inserted;
     }
-
+    let row = rows?.[0];
     if (!row?.id) throw new Error('Supabase no devolvió el identificador de la receta.');
-
     if (file?.size) {
-      const previousPath = coverImagePath;
+      const previous = coverImagePath;
       coverImagePath = await uploadImage(file, row.id);
-      const [updatedWithImage] = await restRequest(`recipes?id=eq.${encodeURIComponent(row.id)}&owner_id=eq.${encodeURIComponent(session.user.id)}`, {
-        method: 'PATCH',
-        headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({ cover_image_path: coverImagePath })
+      const updated = await restRequest(`recipes?id=eq.${encodeURIComponent(row.id)}&${ownerFilter}`, {
+        method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ cover_image_path: coverImagePath })
       });
-      row = updatedWithImage || { ...row, cover_image_path: coverImagePath };
-      if (previousPath && previousPath !== coverImagePath) await removeImage(previousPath);
+      row = updated?.[0] || { ...row, cover_image_path: coverImagePath };
+      if (previous && previous !== coverImagePath) await removeImage(previous);
     }
-
-    await replaceRecipeChildren(row.id, recipe);
+    await replaceChildren(row.id, recipe);
     row.cover_image_path = coverImagePath || row.cover_image_path;
-    return mapRemoteRecipe(
-      row,
+    const names = new Map([[session.user.id, session.user.email?.split('@')[0] || 'Yo']]);
+    return mapRemoteRecipe(row, names,
       recipe.ingredients.map((ingredient_text, position) => ({ ingredient_text, position })),
       recipe.steps.map((instruction, position) => ({ instruction, position }))
     );
@@ -513,6 +430,7 @@
   openForm = function enhancedOpenForm(recipe = null) {
     originalOpenForm(recipe);
     if (imageFileInput) imageFileInput.value = '';
+    updateVisibilityControl(recipe);
     if (recipe?.storageMode === REMOTE_MODE && recipe.coverImagePath && !/^https?:\/\//i.test(recipe.coverImagePath)) {
       document.querySelector('#recipe-image').value = '';
     }
@@ -523,56 +441,44 @@
     event.preventDefault();
     event.stopImmediatePropagation();
     if (busy || !els.form.reportValidity()) return;
-
     busy = true;
-    const submitButton = els.form.querySelector('[type="submit"]');
-    const originalText = submitButton.textContent;
-    submitButton.disabled = true;
-    submitButton.textContent = 'Guardando…';
-
+    const submit = els.form.querySelector('[type="submit"]');
+    const label = submit.textContent;
+    submit.disabled = true;
+    submit.textContent = 'Guardando…';
     try {
       const recipe = formToRecipe(els.form);
+      recipe.visibility = visibilitySelect?.value === 'family' ? 'family' : 'private';
       const existing = userRecipes.find(item => item.id === recipe.id) || null;
+      if (existing?.canEdit === false) throw new Error('Solo la persona que creó esta receta puede editarla.');
       const remote = await saveRemoteRecipe(recipe, existing, imageFileInput?.files?.[0] || null);
       userRecipes = [remote, ...userRecipes.filter(item => item.id !== recipe.id && item.id !== remote.id)];
       remoteRecipes = [remote, ...remoteRecipes.filter(item => item.id !== remote.id)];
       if (existing?.storageMode !== REMOTE_MODE) {
-        const remainingLocals = localOnlyRecipes().filter(item => item.id !== existing?.id);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remainingLocals.map(({ storageMode, ...item }) => item)));
+        const remaining = localOnlyRecipes().filter(item => item.id !== existing?.id);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remaining.map(({ storageMode, canEdit, ...item }) => item)));
       }
       closeForm();
       render();
-      showToast(existing ? 'Receta actualizada en Supabase' : 'Receta guardada en Supabase');
+      showToast(existing ? 'Receta actualizada' : recipe.visibility === 'family' ? 'Receta guardada y compartida con tu familia' : 'Receta guardada en tu cuenta');
       setTimeout(() => openRecipe(remote.id), 50);
     } catch (error) {
-      console.error(error);
       showToast(`No se pudo guardar: ${error.message}`);
     } finally {
       busy = false;
-      submitButton.disabled = false;
-      submitButton.textContent = originalText;
+      submit.disabled = false;
+      submit.textContent = label;
     }
   }, true);
 
   deleteRecipe = async function enhancedDeleteRecipe(id) {
     const recipe = userRecipes.find(item => item.id === id);
     if (recipe?.storageMode !== REMOTE_MODE) {
-      if (!session?.user?.id) {
-        originalDeleteRecipe(id);
-        return;
-      }
-      if (!recipe || !confirm(`¿Eliminar la receta local “${recipe.title}”?`)) return;
-      userRecipes = userRecipes.filter(item => item.id !== id);
-      favorites.delete(id);
-      persistLocalOnly();
-      saveFavorites();
-      closeRecipe();
-      render();
-      showToast('Receta local eliminada');
+      originalDeleteRecipe(id);
       return;
     }
-    if (!confirm(`¿Eliminar la receta “${recipe.title}” de Supabase?`)) return;
-
+    if (recipe.canEdit === false) { showToast('Solo la persona que creó esta receta puede eliminarla'); return; }
+    if (!confirm(`¿Eliminar la receta “${recipe.title}” de tu cuenta?`)) return;
     try {
       await restRequest(`recipes?id=eq.${encodeURIComponent(id)}&owner_id=eq.${encodeURIComponent(session.user.id)}`, { method: 'DELETE' });
       await removeImage(recipe.coverImagePath);
@@ -582,19 +488,14 @@
       saveFavorites();
       closeRecipe();
       render();
-      showToast('Receta eliminada de Supabase');
-    } catch (error) {
-      showToast(`No se pudo eliminar: ${error.message}`);
-    }
+      showToast('Receta eliminada');
+    } catch (error) { showToast(`No se pudo eliminar: ${error.message}`); }
   };
 
   function exportAllRecipes() {
     const payload = {
-      app: 'Recetario de Javi',
-      version: config.version,
-      exportedAt: new Date().toISOString(),
-      authenticatedUser: session?.user?.email || null,
-      recipes: userRecipes.map(({ storageMode, remoteOwnerId, coverImagePath, ...recipe }) => recipe)
+      app: 'Recetario de Javi', version: config.version, exportedAt: new Date().toISOString(),
+      recipes: userRecipes.map(({ storageMode, remoteOwnerId, coverImagePath, canEdit, ...recipe }) => recipe)
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -603,7 +504,7 @@
     anchor.download = `mis-recetas-${new Date().toISOString().slice(0, 10)}.json`;
     anchor.click();
     URL.revokeObjectURL(url);
-    showToast(userRecipes.length ? 'Recetas exportadas' : 'Se exportó una copia vacía');
+    showToast('Copia exportada');
   }
 
   document.querySelector('#export-button')?.addEventListener('click', event => {
@@ -612,52 +513,20 @@
     exportAllRecipes();
   }, true);
 
-  async function syncLocalRecipes() {
-    const locals = localOnlyRecipes();
-    if (!locals.length || busy) return;
-    if (!confirm(`Se subirán ${locals.length} recetas locales a Supabase. ¿Continuar?`)) return;
-
-    busy = true;
-    syncLocalButton.disabled = true;
-    const failed = [];
-    try {
-      for (let index = 0; index < locals.length; index += 1) {
-        syncLocalButton.textContent = `Subiendo ${index + 1}/${locals.length}…`;
-        try {
-          await saveRemoteRecipe(locals[index]);
-        } catch (error) {
-          console.error(error);
-          failed.push(locals[index]);
-        }
-      }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(failed.map(({ storageMode, ...recipe }) => recipe)));
-      await loadRemoteRecipes();
-      showToast(failed.length ? `${locals.length - failed.length} recetas subidas; ${failed.length} no pudieron migrarse` : 'Todas las recetas locales están ya en Supabase');
-    } finally {
-      busy = false;
-      syncLocalButton.disabled = false;
-      updateSyncButton();
+  window.addEventListener('storage', event => {
+    if (event.key === SESSION_KEY) {
+      session = readSession();
+      updateAccountUi();
+      if (session?.user?.id) loadRemoteRecipes(); else clearCloudState();
     }
+  });
+  window.addEventListener('online', () => { if (session?.user?.id) loadRemoteRecipes(); });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js?v=0.3.0', { updateViaCache: 'none' }).then(registration => registration.update()).catch(() => {}));
   }
 
-  authButton?.addEventListener('click', () => {
-    setAuthMessage('Usa la cuenta de tu proyecto Supabase.');
-    authDialog.showModal();
-    setTimeout(() => authEmail.focus(), 30);
-  });
-  logoutButton?.addEventListener('click', logout);
-  syncLocalButton?.addEventListener('click', syncLocalRecipes);
-  authForm?.addEventListener('submit', event => { event.preventDefault(); authenticate('login'); });
-  registerButton?.addEventListener('click', () => authenticate('signup'));
-  document.querySelectorAll('[data-close-auth]').forEach(button => button.addEventListener('click', () => authDialog.close()));
-  authDialog?.addEventListener('click', event => { if (event.target === authDialog) authDialog.close(); });
-  authDialog?.addEventListener('cancel', event => { event.preventDefault(); authDialog.close(); });
-
-  window.addEventListener('online', () => {
-    if (session?.user?.id) loadRemoteRecipes();
-  });
-
-  updateAuthUi();
+  updateAccountUi();
   render();
   if (session?.user?.id) loadRemoteRecipes();
 })();
