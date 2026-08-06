@@ -1,30 +1,29 @@
 # Changelog
 
+## 0.3.0 — 07/08/2026
+
+- Encabezado simplificado: nunca aparecen simultáneamente Acceder y Cerrar sesión.
+- El acceso dirige ahora a una página independiente de cuenta y registro.
+- Exportación movida a un menú secundario visible únicamente en escritorio.
+- Eliminado del encabezado el confuso botón de recetas locales.
+- Nueva página `cuenta.html` con inicio de sesión, registro, perfil y cierre de sesión.
+- Creación de familias privadas y acceso mediante código de invitación.
+- Listado de familiares dentro de la cuenta.
+- Las recetas pueden guardarse como privadas o compartidas con la familia.
+- Los familiares pueden consultar las recetas compartidas, pero solo el autor puede modificarlas.
+- Migración de recetas locales explicada y ubicada dentro de Mi cuenta.
+- Añadida la migración `supabase/002_familias.sql` con tablas, funciones y políticas RLS.
+
 ## 0.2.0 — 07/08/2026
 
-- Búsqueda simultánea por varios ingredientes separados por comas, `+` o punto y coma.
-- Los filtros rápidos ahora acumulan ingredientes en vez de sustituir la búsqueda anterior.
-- Etiquetas visuales para retirar ingredientes concretos de la búsqueda.
-- Integración real con Supabase Auth y las tablas del esquema inicial.
-- Lectura, alta, edición y borrado de recetas privadas en Supabase.
-- Sincronización de ingredientes y pasos relacionados.
+- Búsqueda simultánea por varios ingredientes.
+- Inicio de sesión y sincronización con Supabase.
+- Alta, edición y borrado en la base de datos.
 - Subida de fotografías al bucket privado `recipe-images`.
-- URLs firmadas temporales para visualizar imágenes privadas.
-- Migración voluntaria de recetas locales a Supabase.
-- Modo `localStorage` conservado como respaldo sin sesión.
-- Nueva interfaz de acceso, cierre de sesión y estado de sincronización.
-- Actualización de la PWA y de la caché a la versión 0.2.0.
+- Migración de recetas locales.
 
 ## 0.1.0 — 06/08/2026
 
 - Primera versión usable del recetario.
 - Catálogo inicial con seis recetas de ejemplo.
-- Búsqueda por ingredientes, nombre, categoría y etiquetas.
-- Filtros, ordenación, favoritos y estadísticas.
-- Fichas completas con tiempos, raciones, dificultad, ingredientes, pasos y notas.
-- Formulario para crear, editar y eliminar recetas propias en el navegador.
-- Exportación JSON.
-- Diseño responsive y accesible.
-- PWA y funcionamiento offline básico.
-- Esquema inicial de Supabase con RLS y almacenamiento de fotografías.
-- Preparación funcional para integrar OCR e IA en versiones futuras.
+- Filtros, favoritos, fichas completas y guardado local.
