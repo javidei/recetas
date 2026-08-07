@@ -1,0 +1,61 @@
+[hidden] { display: none !important; }
+
+.admin-page { min-height: 100vh; background: linear-gradient(180deg, #fffaf2 0, #f7ecdf 48%, #fffaf2 100%); }
+.admin-main { padding-bottom: 86px; }
+.admin-header-actions { display: flex; gap: 10px; }
+.admin-hero { max-width: 880px; padding: 72px 0 34px; }
+.admin-hero h1 { margin: 10px 0 18px; font-size: clamp(2.7rem, 7vw, 5.2rem); }
+.admin-hero p { max-width: 760px; margin: 0; color: var(--muted); font-size: 1.08rem; }
+
+.admin-stats { margin-bottom: 24px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.admin-stats article { padding: 22px; border: 1px solid var(--line); border-radius: 22px; background: rgba(255,255,255,.88); box-shadow: 0 12px 34px rgba(78,45,31,.08); }
+.admin-stats strong,.admin-stats span { display: block; }
+.admin-stats strong { color: var(--accent); font-family: Georgia,serif; font-size: 2.5rem; }
+.admin-stats span { margin-top: 3px; color: var(--muted); font-weight: 800; }
+
+.admin-card { padding: clamp(22px,4vw,36px); border: 1px solid var(--line); border-radius: 28px; background: rgba(255,255,255,.92); box-shadow: var(--shadow); }
+.admin-card-heading { margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.admin-card-heading h2 { margin: 6px 0 0; }
+.admin-message { min-height: 24px; color: var(--muted); font-weight: 750; }
+.admin-message[data-error="true"] { color: #982e2e; }
+.account-list { display: grid; gap: 12px; }
+
+.admin-account { padding: 17px 18px; border: 1px solid var(--line); border-radius: 18px; display: grid; grid-template-columns: minmax(0,1.4fr) minmax(150px,.65fr) minmax(130px,.55fr) auto; align-items: center; gap: 18px; background: white; }
+.admin-account__identity { min-width: 0; display: flex; align-items: center; gap: 13px; }
+.admin-account__avatar { flex: 0 0 auto; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; color: white; background: var(--sage); font-weight: 900; }
+.admin-account__identity strong,.admin-account__identity span { display: block; }
+.admin-account__identity strong { font-size: 1rem; }
+.admin-account__identity span { color: var(--muted); overflow-wrap: anywhere; font-size: .85rem; }
+.admin-account__meta strong,.admin-account__meta span { display: block; }
+.admin-account__meta strong { font-size: .9rem; }
+.admin-account__meta span { color: var(--muted); font-size: .78rem; }
+.status-pill { width: fit-content; padding: 6px 9px; border-radius: 999px; font-size: .75rem; font-weight: 900; }
+.status-pill--active { color: #36522f; background: #e4efde; }
+.status-pill--inactive { color: #8d3131; background: #f6dddd; }
+.status-pill--admin { color: var(--accent-dark); background: var(--accent-soft); }
+.admin-account__actions { display: flex; justify-content: flex-end; }
+.admin-account__actions .button { min-width: 110px; box-shadow: none; }
+.admin-account__actions .button[data-action="deactivate"] { color: #8d3131; background: #f6dddd; }
+.admin-account__actions .button[data-action="activate"] { color: #36522f; background: #e4efde; }
+.admin-account__actions .button:disabled { cursor: default; opacity: .55; transform: none; }
+
+.admin-note { margin-top: 22px; padding: 20px 22px; border: 1px solid rgba(109,127,95,.22); border-radius: 20px; background: #eef3e9; }
+.admin-note p { margin: 5px 0 0; color: #526049; }
+.toast { position: fixed; z-index: 120; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 12px 16px; border-radius: 13px; color: white; background: #2d211d; box-shadow: var(--shadow); font-weight: 800; }
+
+@media (max-width: 850px) {
+  .admin-account { grid-template-columns: 1fr 1fr; }
+  .admin-account__identity { grid-column: 1 / -1; }
+}
+
+@media (max-width: 660px) {
+  .admin-hero { padding-top: 48px; }
+  .admin-header-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+  .admin-header-actions .button { width: 100%; }
+  .admin-stats { grid-template-columns: 1fr; }
+  .admin-card-heading { align-items: stretch; flex-direction: column; }
+  .admin-account { grid-template-columns: 1fr; }
+  .admin-account__identity { grid-column: auto; }
+  .admin-account__actions { justify-content: stretch; }
+  .admin-account__actions .button { width: 100%; }
+}
