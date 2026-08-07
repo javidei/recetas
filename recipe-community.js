@@ -12,6 +12,8 @@
   let replyParentId = null;
   let currentAccount = null;
   let metadataLoaded = false;
+  let commentsCollapsed = false;
+  const collapsedThreads = new Set();
 
   function session() {
     try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
@@ -82,18 +84,29 @@
       ? `<span>Modificada ${escapeHtml(formatDate(recipe.updatedAt, true))}</span>`
       : '<span>Sin modificaciones posteriores</span>';
     const provenance = `<div class="detail-provenance"><strong>Receta de ${escapeHtml(ownerLabel(recipe))}</strong><span>Creada ${escapeHtml(formatDate(recipe.createdAt, true))}</span>${modified}</div>`;
-    html = html.replace('<div class="detail-content">', `<div class="detail-content">${provenance}`);
+
+    // Se coloca DESPUÉS de las estadísticas. Antes estaba al principio de
+    // detail-content y las tarjetas, que tienen margen negativo, se superponían.
+    html = html.replace('<div class="detail-columns">', `${provenance}<div class="detail-columns">`);
 
     if (recipe.storageMode === 'remote') {
       const comments = `<section class="comments-section" id="recipe-comments-section" data-comments-recipe="${escapeHtml(recipe.id)}">
-        <div class="comments-heading"><div><span class="eyebrow">Conversación</span><h3>Comentarios</h3></div><span id="comments-count">—</span></div>
-        <div class="comments-list" id="comments-list"><p class="comments-loading">Cargando comentarios…</p></div>
-        <form class="comment-form" id="comment-form">
-          <div class="comment-replying" id="comment-replying" hidden></div>
-          <label class="field"><span>Escribe un comentario</span><textarea id="comment-body" rows="3" maxlength="1500" required placeholder="Comenta esta receta o responde a alguien…"></textarea></label>
-          <div class="comment-form-actions"><button class="text-button" id="cancel-comment-reply" type="button" hidden>Cancelar respuesta</button><button class="button" type="submit">Publicar comentario</button></div>
-          <p class="comment-status" id="comment-status" aria-live="polite"></p>
-        </form>
+        <div class="comments-heading">
+          <div><span class="eyebrow">Conversación</span><h3>Comentarios</h3></div>
+          <div class="comments-heading-actions">
+            <button class="comments-collapse-button" id="toggle-comments" type="button" aria-expanded="true">Ocultar</button>
+            <span id="comments-count">—</span>
+          </div>
+        </div>
+        <div class="comments-body" id="comments-body">
+          <div class="comments-list" id="comments-list"><p class="comments-loading">Cargando comentarios…</p></div>
+          <form class="comment-form" id="comment-form">
+            <div class="comment-replying" id="comment-replying" hidden></div>
+            <label class="field"><span>Escribe un comentario</span><textarea id="comment-body" rows="3" maxlength="1500" required placeholder="Comenta esta receta o responde a alguien…"></textarea></label>
+            <div class="comment-form-actions"><button class="comment-cancel-reply" id="cancel-comment-reply" type="button" hidden>Cancelar respuesta</button><button class="button" type="submit">Publicar comentario</button></div>
+            <p class="comment-status" id="comment-status" aria-live="polite"></p>
+          </form>
+        </div>
       </section>`;
       html = html.replace('<div class="detail-actions">', `${comments}<div class="detail-actions">`);
     }
@@ -104,9 +117,19 @@
     originalOpenRecipe(id, updateHash);
     currentRecipeId = id;
     replyParentId = null;
+    commentsCollapsed = false;
+    collapsedThreads.clear();
     const recipe = findRecipe(id);
     if (recipe?.storageMode === 'remote') setTimeout(() => loadComments(id), 0);
   };
+
+  // El detalle de una receta NO se cierra por pulsar accidentalmente en el
+  // fondo del <dialog>. Solo la X, Escape o la navegación explícita lo cierran.
+  els.detailDialog?.addEventListener('click', event => {
+    if (event.target !== els.detailDialog) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
 
   async function signedAvatar(path) {
     if (!path) return '';
@@ -129,6 +152,17 @@
     return currentAccount;
   }
 
+  async function loadLikes(comments) {
+    const ids = (comments || []).map(comment => comment.id);
+    if (!ids.length) return [];
+    try {
+      return await rest(`recipe_comment_likes?comment_id=in.(${ids.join(',')})&select=comment_id,user_id,created_at`);
+    } catch {
+      // Permite que los comentarios sigan funcionando antes de ejecutar 010.
+      return [];
+    }
+  }
+
   async function loadComments(recipeId) {
     const list = document.querySelector('#comments-list');
     const count = document.querySelector('#comments-count');
@@ -137,6 +171,15 @@
 
     try {
       const comments = await rest(`recipe_comments?recipe_id=eq.${encodeURIComponent(recipeId)}&select=id,recipe_id,author_id,parent_id,body,created_at,updated_at&order=created_at.asc`);
+      const likes = await loadLikes(comments);
+      const current = session();
+      const likeCounts = new Map();
+      const likedByMe = new Set();
+      (likes || []).forEach(like => {
+        likeCounts.set(like.comment_id, (likeCounts.get(like.comment_id) || 0) + 1);
+        if (like.user_id === current?.user?.id) likedByMe.add(like.comment_id);
+      });
+
       const authorIds = [...new Set((comments || []).map(comment => comment.author_id))];
       let accounts = [];
       if (authorIds.length) accounts = await rest(`recetario_accounts?id=in.(${authorIds.join(',')})&select=id,display_name,username,avatar_path`);
@@ -160,13 +203,23 @@
           const initial = escapeHtml(name.charAt(0).toUpperCase() || 'F');
           const canDelete = me && (me.role === 'admin' || me.id === comment.author_id);
           const edited = new Date(comment.updated_at).getTime() - new Date(comment.created_at).getTime() > 60000;
+          const replies = children.get(comment.id) || [];
+          const threadCollapsed = collapsedThreads.has(comment.id);
+          const likeCount = likeCounts.get(comment.id) || 0;
+          const isLiked = likedByMe.has(comment.id);
+
           return `<article class="recipe-comment" data-comment-id="${escapeHtml(comment.id)}" style="--comment-depth:${Math.min(depth, 5)}">
             <div class="comment-avatar"><span>${initial}</span>${avatar ? `<img src="${escapeHtml(avatar)}" alt="" onerror="this.remove()">` : ''}</div>
             <div class="comment-content">
               <div class="comment-meta"><strong>${escapeHtml(name)}</strong>${account.username ? `<span>@${escapeHtml(account.username)}</span>` : ''}<time>${escapeHtml(formatDate(comment.created_at, true))}${edited ? ' · editado' : ''}</time></div>
               <p>${escapeHtml(comment.body).replace(/\n/g, '<br>')}</p>
-              <div class="comment-actions"><button type="button" data-reply-comment="${escapeHtml(comment.id)}" data-reply-name="${escapeHtml(name)}">Responder</button>${canDelete ? `<button type="button" class="danger-text" data-delete-comment="${escapeHtml(comment.id)}">Eliminar</button>` : ''}</div>
-              ${renderBranch(comment.id, depth + 1)}
+              <div class="comment-actions">
+                <button type="button" class="comment-like${isLiked ? ' is-liked' : ''}" data-like-comment="${escapeHtml(comment.id)}" aria-pressed="${isLiked}"><span aria-hidden="true">♥</span> ${likeCount}</button>
+                <button type="button" data-reply-comment="${escapeHtml(comment.id)}" data-reply-name="${escapeHtml(name)}">Responder</button>
+                ${replies.length ? `<button type="button" data-toggle-replies="${escapeHtml(comment.id)}" aria-expanded="${!threadCollapsed}">${threadCollapsed ? `Mostrar respuestas (${replies.length})` : `Ocultar respuestas (${replies.length})`}</button>` : ''}
+                ${canDelete ? `<button type="button" class="danger-text" data-delete-comment="${escapeHtml(comment.id)}">Eliminar</button>` : ''}
+              </div>
+              ${replies.length ? `<div class="comment-replies" data-replies-for="${escapeHtml(comment.id)}" ${threadCollapsed ? 'hidden' : ''}>${renderBranch(comment.id, depth + 1)}</div>` : ''}
             </div>
           </article>`;
         }).join('');
@@ -174,6 +227,7 @@
 
       count.textContent = `${comments?.length || 0}`;
       list.innerHTML = comments?.length ? renderBranch() : '<div class="comments-empty">Todavía no hay comentarios. Puedes inaugurar la conversación.</div>';
+      applyCommentsCollapsedState();
     } catch (error) {
       list.innerHTML = `<div class="comments-empty comments-error">No se pudieron cargar los comentarios: ${escapeHtml(error.message)}</div>`;
       if (/recipe_comments|schema cache|PGRST/i.test(error.message)) list.innerHTML = '<div class="comments-empty comments-error">Falta ejecutar la actualización 007 del Recetario en Supabase.</div>';
@@ -199,6 +253,52 @@
     if (cancel) cancel.hidden = true;
   }
 
+  function applyCommentsCollapsedState() {
+    const body = document.querySelector('#comments-body');
+    const toggle = document.querySelector('#toggle-comments');
+    if (!body || !toggle) return;
+    body.hidden = commentsCollapsed;
+    toggle.textContent = commentsCollapsed ? 'Mostrar' : 'Ocultar';
+    toggle.setAttribute('aria-expanded', String(!commentsCollapsed));
+  }
+
+  function toggleComments() {
+    commentsCollapsed = !commentsCollapsed;
+    applyCommentsCollapsedState();
+  }
+
+  function toggleReplies(commentId, button) {
+    const replies = document.querySelector(`[data-replies-for="${CSS.escape(commentId)}"]`);
+    if (!replies) return;
+    const collapsed = !replies.hidden;
+    replies.hidden = collapsed;
+    if (collapsed) collapsedThreads.add(commentId); else collapsedThreads.delete(commentId);
+    const count = replies.querySelectorAll(':scope > .recipe-comment').length;
+    button.textContent = collapsed ? `Mostrar respuestas (${count})` : `Ocultar respuestas (${count})`;
+    button.setAttribute('aria-expanded', String(!collapsed));
+  }
+
+  async function toggleLike(commentId, button) {
+    const current = session();
+    if (!current?.user?.id || button.disabled) return;
+    const liked = button.getAttribute('aria-pressed') === 'true';
+    button.disabled = true;
+    try {
+      if (liked) {
+        await rest(`recipe_comment_likes?comment_id=eq.${encodeURIComponent(commentId)}&user_id=eq.${encodeURIComponent(current.user.id)}`, { method: 'DELETE' });
+      } else {
+        await rest('recipe_comment_likes', {
+          method: 'POST', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ comment_id: commentId, user_id: current.user.id })
+        });
+      }
+      await loadComments(currentRecipeId);
+    } catch (error) {
+      if (/recipe_comment_likes|schema cache|PGRST/i.test(error.message)) showToast('Falta ejecutar la actualización 010 para activar los likes.');
+      else showToast(`No se pudo actualizar el like: ${error.message}`);
+    } finally { button.disabled = false; }
+  }
+
   async function submitComment(form) {
     const current = session();
     if (!current?.user?.id || !currentRecipeId) return;
@@ -218,6 +318,7 @@
       clearReply();
       status.textContent = 'Comentario publicado.';
       await loadComments(currentRecipeId);
+      window.dispatchEvent(new CustomEvent('recetario:notifications-refresh'));
     } catch (error) {
       status.textContent = `No se pudo publicar: ${error.message}`;
     } finally { button.disabled = false; }
@@ -239,6 +340,12 @@
   });
 
   els.detail.addEventListener('click', event => {
+    const collapse = event.target.closest('#toggle-comments');
+    if (collapse) { toggleComments(); return; }
+    const like = event.target.closest('[data-like-comment]');
+    if (like) { toggleLike(like.dataset.likeComment, like); return; }
+    const thread = event.target.closest('[data-toggle-replies]');
+    if (thread) { toggleReplies(thread.dataset.toggleReplies, thread); return; }
     const reply = event.target.closest('[data-reply-comment]');
     if (reply) { setReply(reply.dataset.replyComment, reply.dataset.replyName); return; }
     const cancel = event.target.closest('#cancel-comment-reply');
