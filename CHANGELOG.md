@@ -11,6 +11,7 @@
 - Selector de emojis con grupos para platos, carnes, pescado, verduras, desayuno, postres, frutas y bebidas.
 - Pantalla de acceso más compacta y centrada en escritorio.
 - Protección temprana del catálogo para que no se renderice sin una sesión válida.
+- Hotfix Supabase: añadida `supabase/005_permisos_recetas.sql` para conceder a `authenticated` los permisos SQL necesarios sobre recetas, ingredientes y pasos, manteniendo el filtrado RLS.
 
 ## 0.4.0 — 07/08/2026
 
