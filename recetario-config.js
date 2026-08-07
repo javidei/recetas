@@ -4,26 +4,47 @@
 window.RECETARIO_CONFIG = Object.freeze({
   supabaseUrl: 'https://avboupigkstzprrgvlhr.supabase.co',
   supabasePublishableKey: 'sb_publishable_eyFLhKFk9HXAab4q1cxG4A_-_la1-OI',
-  version: '0.6.0',
+  version: '0.7.0',
   releaseDate: '07/08/2026'
 });
 
 (() => {
   'use strict';
 
-  // Se carga desde todas las pantallas para que el footer quede al fondo incluso
-  // en navegadores donde el contenido es más corto que la ventana.
-  if (!document.querySelector('link[data-recetario-layout]')) {
-    const layout = document.createElement('link');
-    layout.rel = 'stylesheet';
-    layout.href = 'layout-fixes.css?v=0.6.0';
-    layout.dataset.recetarioLayout = 'true';
-    document.head.appendChild(layout);
-  }
-
   const config = window.RECETARIO_CONFIG;
   const SESSION_KEY = 'recetario-javi-supabase-session-v1';
   const nativeFetch = window.fetch.bind(window);
+
+  function addStyle(href, key) {
+    if (document.querySelector(`link[data-recetario-style="${key}"]`)) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    link.dataset.recetarioStyle = key;
+    document.head.appendChild(link);
+  }
+
+  function addScript(src, key) {
+    if (document.querySelector(`script[data-recetario-script="${key}"]`)) return;
+    const script = document.createElement('script');
+    script.src = src;
+    script.dataset.recetarioScript = key;
+    document.body.appendChild(script);
+  }
+
+  addStyle('layout-fixes.css?v=0.7.0', 'layout');
+  addStyle('community.css?v=0.7.0', 'community');
+
+  window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.version-block strong').forEach(node => { node.textContent = config.version; });
+  });
+
+  window.addEventListener('load', () => {
+    const path = window.location.pathname;
+    if (/\/cuenta\.html$/i.test(path)) addScript('family-actions.js?v=0.7.0', 'family-actions');
+    else if (/\/admin\.html$/i.test(path)) addScript('admin-enhancements.js?v=0.7.0', 'admin-enhancements');
+    else addScript('recipe-community.js?v=0.7.0', 'recipe-community');
+  });
 
   // Compatibilidad: el catálogo antiguo pedía "profiles".
   // Los perfiles actuales viven exclusivamente en recetario_accounts.
