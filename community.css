@@ -7,6 +7,15 @@
   font-size: .78rem;
 }
 .recipe-provenance strong { color: var(--ink); }
+.default-recipe-label {
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #5a4a31 !important;
+  background: #f3e4b9;
+  font-size: .76rem;
+  font-weight: 900;
+}
 
 .detail-provenance {
   margin: 0 0 24px;
@@ -15,12 +24,18 @@
   border-radius: 14px;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px 16px;
   background: #fffaf5;
   font-size: .82rem;
 }
 .detail-provenance strong { color: var(--accent-dark); }
 .detail-provenance span { color: var(--muted); }
+
+/* Fallback visual: si el JS tarda en recolocar el aviso familiar, reserva el
+   espacio necesario para que las estadísticas nunca lo pisen. */
+.detail-content > .shared-recipe-note:first-child { margin-bottom: 64px; }
+.detail-stats + .shared-recipe-note { margin: -8px 0 22px; }
 
 .comments-section {
   margin-top: 28px;
@@ -189,7 +204,7 @@
 }
 
 @media (max-width: 660px) {
-  .recipe-provenance { flex-direction: column; gap: 2px; }
+  .recipe-provenance { flex-direction: column; gap: 4px; }
   .comments-heading { align-items: center; }
   .recipe-comment { margin-left: calc(min(var(--comment-depth), 2) * 12px); grid-template-columns: 34px minmax(0,1fr); }
   .comment-avatar { width: 34px; height: 34px; border-radius: 10px; }
