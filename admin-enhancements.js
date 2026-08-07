@@ -22,18 +22,18 @@
       const image = avatar.querySelector('img');
       let fallback = avatar.querySelector('.admin-avatar-fallback');
 
-      // Siempre existe una única capa de respaldo con la primera letra del nombre.
-      // De esta forma un usuario sin foto nunca queda como un bloque vacío.
+      // Siempre hay una única inicial grande y centrada detrás de la posible foto.
       if (!fallback) {
         fallback = document.createElement('span');
         fallback.className = 'admin-avatar-fallback';
         avatar.prepend(fallback);
       }
-      if (fallback.textContent !== initial) fallback.textContent = initial;
+      fallback.textContent = initial;
       avatar.dataset.initial = initial;
+      avatar.setAttribute('aria-label', `Avatar de ${name.replace(' · Tú', '').trim()}`);
 
-      // Si admin.js había dejado una letra como nodo de texto además del fallback,
-      // la eliminamos para evitar iniciales duplicadas.
+      // admin.js puede pintar inicialmente la letra como nodo de texto. La quitamos
+      // al existir el fallback para que nunca aparezcan letras duplicadas.
       [...avatar.childNodes].forEach(node => {
         if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) node.remove();
       });
@@ -57,12 +57,14 @@
     familyList.querySelectorAll('.admin-family').forEach(form => {
       const icon = form.querySelector('.admin-family__icon');
 
-      // Las familias usan siempre un símbolo familiar reconocible, no iniciales.
-      if (icon && icon.textContent !== '👨‍👩‍👧‍👦') {
-        icon.textContent = '👨‍👩‍👧‍👦';
+      // Emoji simple: se renderiza más grande y consistente que el emoji ZWJ de
+      // varias personas en Android, Windows y navegadores Chromium.
+      if (icon) {
+        icon.textContent = '👪';
+        icon.classList.remove('admin-family__icon--initials');
+        icon.classList.add('admin-family__icon--emoji');
+        icon.setAttribute('aria-label', 'Familia');
       }
-      icon?.classList.remove('admin-family__icon--initials');
-      icon?.classList.add('admin-family__icon--emoji');
 
       if (form.querySelector('[data-admin-delete-family]')) return;
       const button = document.createElement('button');
