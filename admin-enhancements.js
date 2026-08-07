@@ -7,50 +7,62 @@
 
   let decorateScheduled = false;
 
-  function initials(name) {
-    return String(name || 'Familia')
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map(part => part.charAt(0).toUpperCase())
-      .join('') || 'F';
+  function firstInitial(name) {
+    const clean = String(name || 'Familiar').replace(' · Tú', '').trim();
+    return clean.charAt(0).toUpperCase() || 'F';
   }
 
   function decorateAccounts() {
     accountList.querySelectorAll('.admin-account').forEach(card => {
       const avatar = card.querySelector('.admin-account__avatar');
-      const image = avatar?.querySelector('img');
-      const name = card.querySelector('.admin-account__identity strong')?.textContent?.replace(' · Tú', '').trim() || 'F';
       if (!avatar) return;
 
-      // Cuando no hay foto, admin.js ya pinta una única inicial dentro del avatar.
-      // No añadimos un segundo fallback porque era lo que producía S/S, B/B, etc.
-      if (!image) return;
+      const name = card.querySelector('.admin-account__identity strong')?.textContent || 'Familiar';
+      const initial = firstInitial(name);
+      const image = avatar.querySelector('img');
+      let fallback = avatar.querySelector('.admin-avatar-fallback');
 
-      // Si hay foto, dejamos una inicial detrás de la imagen. Solo se verá si
-      // la fotografía falla, igual que en el resto de pantallas del Recetario.
-      if (!avatar.querySelector('.admin-avatar-fallback')) {
-        const fallback = document.createElement('span');
+      // Siempre existe una única capa de respaldo con la primera letra del nombre.
+      // De esta forma un usuario sin foto nunca queda como un bloque vacío.
+      if (!fallback) {
+        fallback = document.createElement('span');
         fallback.className = 'admin-avatar-fallback';
-        fallback.textContent = initials(name);
         avatar.prepend(fallback);
       }
+      if (fallback.textContent !== initial) fallback.textContent = initial;
+      avatar.dataset.initial = initial;
 
+      // Si admin.js había dejado una letra como nodo de texto además del fallback,
+      // la eliminamos para evitar iniciales duplicadas.
+      [...avatar.childNodes].forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) node.remove();
+      });
+
+      if (!image) {
+        avatar.classList.add('admin-account__avatar--fallback');
+        return;
+      }
+
+      avatar.classList.remove('admin-account__avatar--fallback');
       if (image.dataset.fallbackReady === 'true') return;
       image.dataset.fallbackReady = 'true';
-      image.addEventListener('error', () => image.remove(), { once: true });
+      image.addEventListener('error', () => {
+        image.remove();
+        avatar.classList.add('admin-account__avatar--fallback');
+      }, { once: true });
     });
   }
 
   function decorateFamilies() {
     familyList.querySelectorAll('.admin-family').forEach(form => {
-      const name = form.querySelector('.admin-family__info strong')?.textContent?.trim() || 'Familia';
       const icon = form.querySelector('.admin-family__icon');
 
-      if (icon && !icon.classList.contains('admin-family__icon--initials')) {
-        icon.textContent = initials(name);
-        icon.classList.add('admin-family__icon--initials');
+      // Las familias usan siempre un símbolo familiar reconocible, no iniciales.
+      if (icon && icon.textContent !== '👨‍👩‍👧‍👦') {
+        icon.textContent = '👨‍👩‍👧‍👦';
       }
+      icon?.classList.remove('admin-family__icon--initials');
+      icon?.classList.add('admin-family__icon--emoji');
 
       if (form.querySelector('[data-admin-delete-family]')) return;
       const button = document.createElement('button');
