@@ -1,12 +1,12 @@
-const CACHE_NAME = 'recetario-javi-v0.7.2';
+const CACHE_NAME = 'recetario-javi-v0.7.3';
 const APP_SHELL = [
   './', './index.html', './cuenta.html', './admin.html',
   './styles.css?v=0.6.0', './supabase.css?v=0.6.0', './account.css?v=0.6.0', './admin.css?v=0.6.0',
-  './recipe-save.css?v=0.6.0', './layout-fixes.css?v=0.7.2', './community.css?v=0.7.2', './confirmation-ui.css?v=0.7.2',
-  './private-gate.js?v=0.6.0', './recetario-config.js?v=0.7.2', './app.js?v=0.6.0',
+  './recipe-save.css?v=0.6.0', './layout-fixes.css?v=0.7.3', './community.css?v=0.7.3', './confirmation-ui.css?v=0.7.3',
+  './private-gate.js?v=0.6.0', './recetario-config.js?v=0.7.3', './app.js?v=0.6.0',
   './recipe-save.js?v=0.6.0', './supabase-sync.js?v=0.6.0', './account.js?v=0.6.0', './admin.js?v=0.6.0',
-  './recipe-community.js?v=0.7.2', './recipe-metadata.js?v=0.7.2', './family-actions.js?v=0.7.2', './admin-enhancements.js?v=0.7.2',
-  './confirmation-ui.js?v=0.7.2',
+  './recipe-community.js?v=0.7.3', './recipe-metadata.js?v=0.7.3', './family-actions.js?v=0.7.3', './admin-enhancements.js?v=0.7.3',
+  './confirmation-ui.js?v=0.7.3', './account-header.js?v=0.7.3',
   './manifest.webmanifest', './assets/recetario.svg'
 ];
 
