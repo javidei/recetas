@@ -19,16 +19,26 @@
   function decorateAccounts() {
     accountList.querySelectorAll('.admin-account').forEach(card => {
       const avatar = card.querySelector('.admin-account__avatar');
+      const image = avatar?.querySelector('img');
       const name = card.querySelector('.admin-account__identity strong')?.textContent?.replace(' · Tú', '').trim() || 'F';
-      if (!avatar || avatar.querySelector('.admin-avatar-fallback')) return;
+      if (!avatar) return;
 
-      const fallback = document.createElement('span');
-      fallback.className = 'admin-avatar-fallback';
-      fallback.textContent = initials(name);
-      avatar.prepend(fallback);
+      // Cuando no hay foto, admin.js ya pinta una única inicial dentro del avatar.
+      // No añadimos un segundo fallback porque era lo que producía S/S, B/B, etc.
+      if (!image) return;
 
-      const image = avatar.querySelector('img');
-      if (image) image.addEventListener('error', () => image.remove(), { once: true });
+      // Si hay foto, dejamos una inicial detrás de la imagen. Solo se verá si
+      // la fotografía falla, igual que en el resto de pantallas del Recetario.
+      if (!avatar.querySelector('.admin-avatar-fallback')) {
+        const fallback = document.createElement('span');
+        fallback.className = 'admin-avatar-fallback';
+        fallback.textContent = initials(name);
+        avatar.prepend(fallback);
+      }
+
+      if (image.dataset.fallbackReady === 'true') return;
+      image.dataset.fallbackReady = 'true';
+      image.addEventListener('error', () => image.remove(), { once: true });
     });
   }
 
@@ -37,9 +47,6 @@
       const name = form.querySelector('.admin-family__info strong')?.textContent?.trim() || 'Familia';
       const icon = form.querySelector('.admin-family__icon');
 
-      // Importante: solo tocamos el DOM una vez. Antes se asignaba textContent en
-      // cada pasada del MutationObserver, generando otra mutación y pudiendo entrar
-      // en un bucle que terminaba congelando el navegador.
       if (icon && !icon.classList.contains('admin-family__icon--initials')) {
         icon.textContent = initials(name);
         icon.classList.add('admin-family__icon--initials');
