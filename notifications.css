@@ -147,8 +147,8 @@
 .notifications-error { color: #8d3131; background: #fff0f0; }
 
 @media (max-width: 660px) {
-  /* Portada: campana compacta + Mi cuenta en la primera fila y Nueva receta debajo. */
-  .header-actions.has-notifications {
+  /* Portada: campana compacta + Mi cuenta arriba y Nueva receta debajo. */
+  .header-actions:has(.notifications-button) {
     width: 100%;
     display: grid !important;
     grid-template-columns: 44px minmax(0, 1fr) !important;
@@ -156,7 +156,7 @@
     align-items: center;
     gap: 8px !important;
   }
-  .header-actions.has-notifications .notifications-button {
+  .header-actions:has(.notifications-button) .notifications-button {
     grid-column: 1;
     grid-row: 1;
     width: 44px;
@@ -164,57 +164,57 @@
     height: 44px;
     border-radius: 14px;
   }
-  .header-actions.has-notifications .account-button {
+  .header-actions:has(.notifications-button) .account-button {
     grid-column: 2;
     grid-row: 1;
     width: 100%;
   }
-  .header-actions.has-notifications #new-recipe-button {
+  .header-actions:has(.notifications-button) #new-recipe-button {
     grid-column: 1 / -1;
     grid-row: 2;
     width: 100%;
   }
 
-  /* Administración: evita que la campana fuerce una tercera columna estrecha. */
-  .admin-header-actions.has-notifications {
+  /* Administración: evita una tercera columna estrecha. */
+  .admin-header-actions:has(.notifications-button) {
     width: 100%;
     display: grid !important;
     grid-template-columns: 44px minmax(0, 1fr) !important;
     gap: 8px !important;
   }
-  .admin-header-actions.has-notifications .notifications-button {
+  .admin-header-actions:has(.notifications-button) .notifications-button {
     grid-column: 1;
     grid-row: 1;
   }
-  .admin-header-actions.has-notifications .button:first-of-type {
+  .admin-header-actions:has(.notifications-button) .button:first-of-type {
     grid-column: 2;
     grid-row: 1;
     width: 100%;
   }
-  .admin-header-actions.has-notifications .button:last-of-type {
+  .admin-header-actions:has(.notifications-button) .button:last-of-type {
     grid-column: 1 / -1;
     grid-row: 2;
     width: 100%;
   }
 
-  /* Mi cuenta: marca una fila propia para logo/campana y deja Volver debajo. */
-  .header-inner.has-notifications-direct {
+  /* Mi cuenta: logo/campana arriba y Volver debajo. */
+  .header-inner:has(> .notifications-button) {
     display: grid !important;
     grid-template-columns: minmax(0,1fr) 44px;
     align-items: center;
     gap: 10px;
     padding-block: 10px;
   }
-  .header-inner.has-notifications-direct .brand {
+  .header-inner:has(> .notifications-button) .brand {
     grid-column: 1;
     grid-row: 1;
     min-width: 0;
   }
-  .header-inner.has-notifications-direct > .notifications-button {
+  .header-inner:has(> .notifications-button) > .notifications-button {
     grid-column: 2;
     grid-row: 1;
   }
-  .header-inner.has-notifications-direct > a.button {
+  .header-inner:has(> .notifications-button) > a.button {
     grid-column: 1 / -1;
     grid-row: 2;
     width: 100%;
@@ -230,7 +230,7 @@
     font-size: .62rem;
   }
 
-  /* En móvil funciona como una hoja inferior y no tapa el header. */
+  /* Hoja inferior: evita tapar el encabezado y aprovecha mejor la pantalla. */
   .notifications-panel {
     top: auto;
     right: 10px;
