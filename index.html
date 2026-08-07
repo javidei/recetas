@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#8f3d2f">
-  <meta name="description" content="Recetario familiar para guardar, compartir y consultar recetas por varios ingredientes.">
+  <meta name="description" content="Recetario familiar privado para guardar, compartir y consultar recetas por varios ingredientes.">
   <title>Recetario de Javi</title>
   <link rel="icon" href="assets/recetario.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css?v=0.3.0">
-  <link rel="stylesheet" href="supabase.css?v=0.3.0">
-  <script defer src="recetario-config.js?v=0.3.0"></script>
-  <script defer src="app.js?v=0.3.0"></script>
-  <script defer src="supabase-sync.js?v=0.3.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.4.0">
+  <link rel="stylesheet" href="supabase.css?v=0.4.0">
+  <script defer src="recetario-config.js?v=0.4.0"></script>
+  <script defer src="app.js?v=0.4.0"></script>
+  <script defer src="supabase-sync.js?v=0.4.0"></script>
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -33,7 +33,7 @@
             <button id="export-button" type="button">Exportar copia JSON</button>
           </div>
         </details>
-        <a class="button button--soft account-button" id="account-button" href="cuenta.html">Acceder</a>
+        <a class="button button--soft account-button" id="account-button" href="cuenta.html">Mi cuenta</a>
         <button class="button" id="new-recipe-button" type="button">+ Nueva receta</button>
       </nav>
     </div>
@@ -139,7 +139,7 @@
         <span>HTML, CSS, JavaScript y Supabase · GitHub Pages</span>
       </div>
       <div class="version-block">
-        <span>Versión <strong>0.3.0</strong></span>
+        <span>Versión <strong>0.4.0</strong></span>
         <span>07/08/2026</span>
       </div>
     </div>
@@ -174,14 +174,14 @@
         <label class="field"><span>Nota</span><input id="recipe-rating" name="rating" type="number" min="0" max="5" step="0.5" value="4"></label>
         <label class="field"><span>Icono</span><input id="recipe-emoji" name="emoji" maxlength="4" value="🍲" aria-describedby="emoji-help"><small id="emoji-help">Un emoji representativo.</small></label>
         <label class="field"><span>Compartir</span><select id="recipe-visibility" name="visibility"><option value="private">Solo para mí</option><option value="family" disabled>Con mi familia</option></select><small id="recipe-visibility-help">Crea o únete a una familia desde Mi cuenta.</small></label>
-        <label class="field"><span>Foto propia</span><input id="recipe-image-file" name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" disabled><small>JPG, PNG o WEBP, máximo 5 MB. Requiere iniciar sesión.</small></label>
+        <label class="field"><span>Foto propia</span><input id="recipe-image-file" name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" disabled><small>JPG, PNG o WEBP, máximo 5 MB.</small></label>
         <label class="field field--wide"><span>Foto por URL</span><input id="recipe-image" name="imageUrl" type="url" placeholder="https://…"><small>Opcional, como alternativa a subir una fotografía.</small></label>
         <label class="field field--wide"><span>Ingredientes *</span><textarea id="recipe-ingredients" name="ingredients" required rows="7" placeholder="Uno por línea. Ej.:&#10;300 g de pollo&#10;2 patatas&#10;1 cebolla"></textarea></label>
         <label class="field field--wide"><span>Pasos *</span><textarea id="recipe-steps" name="steps" required rows="7" placeholder="Un paso por línea."></textarea></label>
         <label class="field field--wide"><span>Notas personales</span><textarea id="recipe-notes" name="notes" rows="3" placeholder="Trucos, cambios o recordatorios para la próxima vez."></textarea></label>
       </div>
 
-      <p class="storage-note" id="storage-note"><strong>Guardado local.</strong> Accede a tu cuenta para sincronizar y compartir recetas.</p>
+      <p class="storage-note" id="storage-note"><strong>Guardado en la nube.</strong> Elige si quieres mantener la receta privada o compartirla con tu familia.</p>
       <div class="form-actions">
         <button class="button button--soft" type="button" data-close-form>Cancelar</button>
         <button class="button" type="submit">Guardar receta</button>
