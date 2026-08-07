@@ -4,19 +4,29 @@
 window.RECETARIO_CONFIG = Object.freeze({
   supabaseUrl: 'https://avboupigkstzprrgvlhr.supabase.co',
   supabasePublishableKey: 'sb_publishable_eyFLhKFk9HXAab4q1cxG4A_-_la1-OI',
-  version: '0.5.0',
+  version: '0.6.0',
   releaseDate: '07/08/2026'
 });
 
 (() => {
   'use strict';
 
+  // Se carga desde todas las pantallas para que el footer quede al fondo incluso
+  // en navegadores donde el contenido es más corto que la ventana.
+  if (!document.querySelector('link[data-recetario-layout]')) {
+    const layout = document.createElement('link');
+    layout.rel = 'stylesheet';
+    layout.href = 'layout-fixes.css?v=0.6.0';
+    layout.dataset.recetarioLayout = 'true';
+    document.head.appendChild(layout);
+  }
+
   const config = window.RECETARIO_CONFIG;
   const SESSION_KEY = 'recetario-javi-supabase-session-v1';
   const nativeFetch = window.fetch.bind(window);
 
-  // Compatibilidad: el catálogo anterior pedía "profiles".
-  // Esos datos viven exclusivamente en recetario_accounts.
+  // Compatibilidad: el catálogo antiguo pedía "profiles".
+  // Los perfiles actuales viven exclusivamente en recetario_accounts.
   window.fetch = function recetarioFetch(input, options) {
     const raw = typeof input === 'string' ? input : input?.url;
     if (!raw) return nativeFetch(input, options);
