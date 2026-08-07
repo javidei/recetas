@@ -41,9 +41,14 @@ window.RECETARIO_CONFIG = Object.freeze({
 
   window.addEventListener('load', () => {
     const path = window.location.pathname;
-    if (/\/cuenta\.html$/i.test(path)) addScript('family-actions.js?v=0.7.0', 'family-actions');
-    else if (/\/admin\.html$/i.test(path)) addScript('admin-enhancements.js?v=0.7.0', 'admin-enhancements');
-    else addScript('recipe-community.js?v=0.7.0', 'recipe-community');
+    if (/\/cuenta\.html$/i.test(path)) {
+      addScript('family-actions.js?v=0.7.0', 'family-actions');
+    } else if (/\/admin\.html$/i.test(path)) {
+      addScript('admin-enhancements.js?v=0.7.0', 'admin-enhancements');
+    } else {
+      addScript('recipe-community.js?v=0.7.0', 'recipe-community');
+      addScript('recipe-metadata.js?v=0.7.0', 'recipe-metadata');
+    }
   });
 
   // Compatibilidad: el catálogo antiguo pedía "profiles".
