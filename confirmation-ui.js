@@ -3,6 +3,7 @@
 
   const config = window.RECETARIO_CONFIG;
   const SESSION_KEY = 'recetario-javi-supabase-session-v1';
+  const REQUEST_TIMEOUT = 12000;
   if (!config) return;
 
   let activeResolver = null;
@@ -37,7 +38,13 @@
       </div>`;
 
     const finish = result => {
-      if (!activeResolver) return;
+      // Si la promesa ya se resolvió (por ejemplo, tras pulsar Confirmar con
+      // keepOpenAfterAccept), el botón Cerrar debe seguir cerrando el diálogo.
+      if (!activeResolver) {
+        if (!result && dialog.open) dialog.close();
+        return;
+      }
+
       const resolve = activeResolver;
       activeResolver = null;
       if (!result || !keepOpenAfterAccept) {
@@ -72,9 +79,11 @@
 
   window.recetarioConfirm = function recetarioConfirm(options = {}) {
     const dialog = ensureDialog();
-    if (dialog.open && activeResolver) {
-      activeResolver(false);
-      activeResolver = null;
+    if (dialog.open) {
+      if (activeResolver) {
+        activeResolver(false);
+        activeResolver = null;
+      }
       dialog.close();
     }
 
@@ -88,14 +97,16 @@
     const warning = dialog.querySelector('#recetario-confirm-warning');
     warning.textContent = options.warning || '';
     warning.hidden = !options.warning;
-    dialog.querySelector('#recetario-confirm-status').textContent = '';
+    const status = dialog.querySelector('#recetario-confirm-status');
+    status.textContent = '';
+    status.dataset.error = 'false';
     dialog.querySelector('#recetario-confirm-cancel').textContent = options.cancelLabel || 'Cancelar';
     dialog.querySelector('#recetario-confirm-accept').textContent = options.confirmLabel || 'Confirmar';
     dialog.querySelector('#recetario-confirm-cancel').disabled = false;
     dialog.querySelector('#recetario-confirm-accept').disabled = false;
 
     document.body.classList.add('has-modal');
-    if (!dialog.open) dialog.showModal();
+    dialog.showModal();
     requestAnimationFrame(() => dialog.querySelector('#recetario-confirm-cancel').focus());
 
     return new Promise(resolve => { activeResolver = resolve; });
@@ -105,22 +116,45 @@
     const dialog = ensureDialog();
     dialog.querySelector('#recetario-confirm-cancel').disabled = busy;
     dialog.querySelector('#recetario-confirm-accept').disabled = busy;
-    dialog.querySelector('#recetario-confirm-status').textContent = status;
+    const statusNode = dialog.querySelector('#recetario-confirm-status');
+    statusNode.textContent = status;
+    statusNode.dataset.error = 'false';
   }
 
   function setDialogError(message) {
     const dialog = ensureDialog();
+    keepOpenAfterAccept = false;
     dialog.querySelector('#recetario-confirm-cancel').disabled = false;
     dialog.querySelector('#recetario-confirm-accept').disabled = false;
-    dialog.querySelector('#recetario-confirm-status').textContent = message;
-    dialog.querySelector('#recetario-confirm-status').dataset.error = 'true';
+    dialog.querySelector('#recetario-confirm-accept').hidden = true;
+    const status = dialog.querySelector('#recetario-confirm-status');
+    status.textContent = message;
+    status.dataset.error = 'true';
     dialog.querySelector('#recetario-confirm-cancel').textContent = 'Cerrar';
+  }
+
+  function resetConfirmButton() {
+    const dialog = ensureDialog();
+    dialog.querySelector('#recetario-confirm-accept').hidden = false;
+  }
+
+  async function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal, cache: 'no-store' });
+    } catch (error) {
+      if (controller.signal.aborted) throw new Error('Supabase está tardando demasiado en responder. Puedes cerrar este aviso y volver a intentarlo.');
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   async function rpc(name, body = {}) {
     const current = session();
     if (!current?.access_token) throw new Error('Tu sesión ha caducado.');
-    const response = await fetch(`${config.supabaseUrl}/rest/v1/rpc/${name}`, {
+    const response = await fetchWithTimeout(`${config.supabaseUrl}/rest/v1/rpc/${name}`, {
       method: 'POST',
       headers: {
         apikey: config.supabasePublishableKey,
@@ -145,7 +179,7 @@
   async function restDelete(path) {
     const current = session();
     if (!current?.access_token) throw new Error('Tu sesión ha caducado.');
-    const response = await fetch(`${config.supabaseUrl}/rest/v1/${path}`, {
+    const response = await fetchWithTimeout(`${config.supabaseUrl}/rest/v1/${path}`, {
       method: 'DELETE',
       headers: {
         apikey: config.supabasePublishableKey,
@@ -164,6 +198,7 @@
   }
 
   async function confirmDeleteFamily(button, adminView) {
+    resetConfirmButton();
     const card = button.closest('.family-group-card, .admin-family');
     const name = card?.querySelector('h3, .admin-family__info strong')?.textContent?.trim() || 'esta familia';
     const familyId = button.dataset.deleteFamily || button.dataset.adminDeleteFamily;
@@ -183,17 +218,11 @@
     setDialogBusy(true, 'Eliminando familia…');
     try {
       await rpc('delete_recipe_family', { target_family_id: familyId });
-      const dialog = ensureDialog();
-      dialog.querySelector('#recetario-confirm-status').dataset.error = 'false';
-      dialog.querySelector('#recetario-confirm-status').textContent = 'Familia eliminada correctamente.';
-
-      // Quitamos la tarjeta inmediatamente para que la acción sea visible incluso
-      // antes de que termine una recarga o la actualización del panel.
       card?.remove();
-      if (dialog.open) dialog.close();
-
+      ensureDialog().close();
       if (adminView) {
-        document.querySelector('#refresh-button')?.click();
+        if (typeof window.recetarioAdminRefresh === 'function') window.recetarioAdminRefresh();
+        else document.querySelector('#refresh-button')?.click();
       } else {
         location.reload();
       }
@@ -203,6 +232,7 @@
   }
 
   async function confirmAccountChange(button) {
+    resetConfirmButton();
     const active = button.dataset.action === 'activate';
     const card = button.closest('.admin-account');
     const name = card?.querySelector('.admin-account__identity strong')?.textContent?.replace(' · Tú', '').trim() || 'esta cuenta';
@@ -210,8 +240,8 @@
       eyebrow: active ? 'Reactivar cuenta' : 'Desactivar cuenta',
       title: active ? `¿Reactivar a ${name}?` : `¿Desactivar a ${name}?`,
       message: active
-        ? 'La persona recuperará el acceso al recetario con su cuenta habitual.'
-        : 'La persona dejará de poder acceder al recetario hasta que vuelvas a reactivarla.',
+        ? 'La persona recuperará el acceso a El Recetario con su cuenta habitual.'
+        : 'La persona dejará de poder acceder a El Recetario hasta que vuelvas a reactivarla.',
       warning: active ? '' : 'Sus recetas y comentarios no se eliminan; únicamente se bloquea el acceso.',
       confirmLabel: active ? 'Sí, reactivar' : 'Sí, desactivar',
       variant: active ? 'success' : 'danger',
@@ -227,13 +257,15 @@
         target_active: active
       });
       ensureDialog().close();
-      document.querySelector('#refresh-button')?.click();
+      if (typeof window.recetarioAdminRefresh === 'function') window.recetarioAdminRefresh();
+      else document.querySelector('#refresh-button')?.click();
     } catch (error) {
       setDialogError(`No se pudo cambiar la cuenta: ${error.message}`);
     }
   }
 
   async function confirmDeleteComment(button) {
+    resetConfirmButton();
     const article = button.closest('.recipe-comment');
     const nestedCount = article ? article.querySelectorAll('.recipe-comment').length : 0;
     const accepted = await window.recetarioConfirm({
@@ -267,6 +299,7 @@
   }
 
   async function confirmDeleteRecipe(button) {
+    resetConfirmButton();
     const id = button.dataset.deleteRecipe;
     let recipe = null;
     try { recipe = typeof findRecipe === 'function' ? findRecipe(id) : null; } catch {}
@@ -274,7 +307,7 @@
     const accepted = await window.recetarioConfirm({
       eyebrow: 'Eliminar receta',
       title: `¿Eliminar “${title}”?`,
-      message: 'La receta desaparecerá de tu recetario.',
+      message: 'La receta desaparecerá de El Recetario.',
       warning: 'También se eliminarán sus ingredientes, pasos, comentarios y la imagen almacenada. Esta acción no se puede deshacer.',
       confirmLabel: 'Sí, eliminar receta',
       icon: '×',
