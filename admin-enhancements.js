@@ -16,19 +16,30 @@
   async function rpc(name, body) {
     const current = session();
     if (!current?.access_token) throw new Error('Tu sesión ha caducado.');
-    const response = await fetch(`${config.supabaseUrl}/rest/v1/rpc/${name}`, {
-      method: 'POST',
-      headers: {
-        apikey: config.supabasePublishableKey,
-        Authorization: `Bearer ${current.access_token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body || {})
-    });
-    if (!response.ok) {
-      let message = `Error ${response.status}`;
-      try { const data = await response.json(); message = data.message || data.error || message; } catch {}
-      throw new Error(message);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    try {
+      const response = await fetch(`${config.supabaseUrl}/rest/v1/rpc/${name}`, {
+        method: 'POST',
+        signal: controller.signal,
+        cache: 'no-store',
+        headers: {
+          apikey: config.supabasePublishableKey,
+          Authorization: `Bearer ${current.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body || {})
+      });
+      if (!response.ok) {
+        let message = `Error ${response.status}`;
+        try { const data = await response.json(); message = data.message || data.error || message; } catch {}
+        throw new Error(message);
+      }
+    } catch (error) {
+      if (controller.signal.aborted) throw new Error('Supabase está tardando demasiado. Vuelve a intentarlo.');
+      throw error;
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -82,7 +93,8 @@
     button.disabled = true;
     try {
       await rpc('delete_recipe_family', { target_family_id: button.dataset.adminDeleteFamily });
-      refresh?.click();
+      if (typeof window.recetarioAdminRefresh === 'function') window.recetarioAdminRefresh();
+      else refresh?.click();
     } catch (error) {
       button.disabled = false;
       alert(`No se pudo eliminar la familia: ${error.message}`);
