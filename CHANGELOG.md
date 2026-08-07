@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.8.0 — 07/08/2026
+
+- El popup de detalle de una receta ya no se cierra al pulsar accidentalmente fuera.
+- Corregida la superposición visual del bloque de autor y fechas con las tarjetas de Nota, Preparación, Cocinado, Dificultad y Raciones.
+- Botón «Cancelar respuesta» rediseñado para integrarse con la interfaz.
+- La sección completa de comentarios puede plegarse y desplegarse.
+- Los hilos con respuestas pueden plegarse de forma independiente.
+- Añadidos likes a comentarios, con contador y estado personal.
+- Añadido centro de notificaciones interno mediante campana y contador de pendientes.
+- Se genera una notificación cuando otra persona comenta una receta propia.
+- Se genera una notificación cuando otra persona responde a un comentario propio.
+- Las notificaciones permiten abrir directamente la receta relacionada y marcarlas como leídas.
+- Añadida `supabase/010_likes_notificaciones.sql` con tablas, triggers y políticas RLS para likes y notificaciones.
+
 ## 0.7.0 — 07/08/2026
 
 - Máximo de 3 familias por cuenta normal; la cuenta administradora general queda exenta.
@@ -78,5 +92,3 @@
 ## 0.1.0 — 06/08/2026
 
 - Primera versión usable del recetario.
-- Catálogo inicial con seis recetas de ejemplo.
-- Filtros, favoritos, fichas completas y guardado local.
