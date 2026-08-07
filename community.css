@@ -1,0 +1,145 @@
+.recipe-provenance {
+  margin: 4px 0 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: .78rem;
+}
+.recipe-provenance strong { color: var(--ink); }
+
+.detail-provenance {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  background: #fffaf5;
+  font-size: .82rem;
+}
+.detail-provenance strong { color: var(--accent-dark); }
+.detail-provenance span { color: var(--muted); }
+
+.comments-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+.comments-heading {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+.comments-heading h3 { margin: 5px 0 0; font-size: 1.65rem; }
+.comments-heading > span {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-weight: 900;
+}
+.comments-list { display: grid; gap: 12px; }
+.comments-loading,.comments-empty {
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+  background: #fffaf5;
+}
+.comments-error { color: #8d3131; background: #fff0f0; }
+.recipe-comment {
+  margin-left: calc(min(var(--comment-depth), 3) * 22px);
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr);
+  gap: 10px;
+}
+.comment-avatar {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: var(--sage);
+  font-weight: 900;
+}
+.comment-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.comment-content {
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: white;
+}
+.comment-content .recipe-comment { margin-top: 11px; }
+.comment-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.comment-meta strong { font-size: .9rem; }
+.comment-meta span,.comment-meta time { color: var(--muted); font-size: .74rem; }
+.comment-content > p { margin: 8px 0; line-height: 1.55; }
+.comment-actions { display: flex; gap: 12px; }
+.comment-actions button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--accent-dark);
+  font-size: .76rem;
+  font-weight: 850;
+}
+.comment-form {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: #fffaf5;
+}
+.comment-replying { margin-bottom: 10px; color: var(--muted); font-size: .82rem; }
+.comment-form-actions { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+.comment-form-actions .text-button { margin: 0; }
+.comment-status { min-height: 20px; margin: 8px 0 0; color: var(--muted); font-size: .8rem; }
+
+.family-limit-note {
+  margin: 14px 0 0;
+  padding: 11px 13px;
+  border-radius: 13px;
+  color: #76542d;
+  background: #fff1ce;
+  font-size: .84rem;
+  font-weight: 750;
+}
+.family-delete-button { margin-top: 14px; }
+
+.admin-account__avatar { position: relative; }
+.admin-avatar-fallback { position: relative; z-index: 0; }
+.admin-account__avatar img { position: absolute; z-index: 1; inset: 0; }
+.admin-family__icon--initials {
+  color: var(--accent-dark);
+  background: #f3dfcf;
+  font-family: Georgia,"Times New Roman",serif;
+  font-size: .95rem;
+  font-weight: 900;
+  letter-spacing: .03em;
+}
+.admin-family__delete {
+  color: #8d3131;
+  background: #f6dddd;
+  box-shadow: none;
+}
+
+@media (max-width: 660px) {
+  .recipe-provenance { flex-direction: column; gap: 2px; }
+  .recipe-comment { margin-left: calc(min(var(--comment-depth), 2) * 12px); grid-template-columns: 34px minmax(0,1fr); }
+  .comment-avatar { width: 34px; height: 34px; border-radius: 10px; }
+  .comment-form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .comment-form-actions .button { width: 100%; }
+}
