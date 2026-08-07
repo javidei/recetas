@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#8f3d2f">
-  <meta name="description" content="Administración de cuentas del Recetario de Javi.">
+  <meta name="description" content="Administración de cuentas y familias del Recetario de Javi.">
   <title>Administración · Recetario de Javi</title>
   <link rel="icon" href="assets/recetario.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=0.5.0">
-  <link rel="stylesheet" href="admin.css?v=0.5.0">
-  <script defer src="recetario-config.js?v=0.5.0"></script>
-  <script defer src="admin.js?v=0.5.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.6.0">
+  <link rel="stylesheet" href="admin.css?v=0.6.0">
+  <script defer src="recetario-config.js?v=0.6.0"></script>
+  <script defer src="admin.js?v=0.6.0"></script>
 </head>
 <body class="admin-page">
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -31,13 +31,14 @@
   <main id="contenido" class="shell admin-main">
     <section class="admin-hero">
       <span class="eyebrow">Solo administrador</span>
-      <h1>Gestionar cuentas del recetario</h1>
-      <p>Desde aquí puedes ver las cuentas que pertenecen a esta aplicación, su familia y cuántas recetas han creado. El límite es de 10 cuentas activas.</p>
+      <h1>Gestionar el recetario familiar</h1>
+      <p>Consulta usuarios, las familias a las que pertenecen, sus recetas y el estado de cada cuenta. También puedes cambiar el nombre de cualquier grupo familiar.</p>
     </section>
 
-    <section class="admin-stats" aria-label="Resumen de cuentas">
+    <section class="admin-stats" aria-label="Resumen">
       <article><strong id="active-count">—</strong><span>Cuentas activas</span></article>
       <article><strong id="available-count">—</strong><span>Huecos disponibles</span></article>
+      <article><strong id="family-count">—</strong><span>Familias creadas</span></article>
       <article><strong id="recipe-count">—</strong><span>Recetas guardadas</span></article>
     </section>
 
@@ -49,21 +50,31 @@
         </div>
         <button class="button button--soft" id="refresh-button" type="button">Actualizar</button>
       </div>
-
       <p class="admin-message" id="admin-message" aria-live="polite">Cargando cuentas…</p>
       <div class="account-list" id="account-list"></div>
     </section>
 
+    <section class="admin-card families-admin-card">
+      <div class="admin-card-heading">
+        <div>
+          <span class="eyebrow">Grupos</span>
+          <h2>Familias</h2>
+          <p>Los usuarios pueden pertenecer a varias familias.</p>
+        </div>
+      </div>
+      <div class="admin-family-list" id="family-list"></div>
+    </section>
+
     <section class="admin-note">
-      <strong>Qué puedes gestionar aquí</strong>
-      <p>Puedes activar o desactivar el acceso al recetario. Las contraseñas no se muestran ni se almacenan en esta web; las gestiona Supabase Auth.</p>
+      <strong>Privacidad y permisos</strong>
+      <p>Las contraseñas nunca se muestran. Puedes activar o desactivar cuentas y renombrar grupos; las credenciales siguen gestionadas por Supabase Auth.</p>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="shell footer-inner">
-      <div><strong>Recetario de Javi</strong><span>Administración privada de cuentas familiares</span></div>
-      <div class="version-block"><span>Versión <strong>0.5.0</strong></span><span>07/08/2026</span></div>
+      <div><strong>Recetario de Javi</strong><span>Administración privada de cuentas y familias</span></div>
+      <div class="version-block"><span>Versión <strong>0.6.0</strong></span><span>07/08/2026</span></div>
     </div>
   </footer>
 
