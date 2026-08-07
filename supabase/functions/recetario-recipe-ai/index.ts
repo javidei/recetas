@@ -40,9 +40,10 @@ function bearerToken(request: Request) {
   return authorization.match(/^Bearer\s+(.+)$/i)?.[1] || '';
 }
 
+// Gemini Structured Output admite un subconjunto de JSON Schema.
+// No usamos additionalProperties porque la API lo rechaza dentro de responseSchema.
 const recipeSchema = {
   type: 'object',
-  additionalProperties: false,
   properties: {
     isRecipe: { type: 'boolean' },
     title: { type: 'string' },
