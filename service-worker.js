@@ -1,13 +1,13 @@
-const CACHE_NAME = 'el-recetario-v0.8.5';
+const CACHE_NAME = 'el-recetario-v0.8.6';
 const APP_SHELL = [
   './', './index.html', './cuenta.html', './admin.html',
-  './styles.css?v=0.8.5', './supabase.css?v=0.8.5', './account.css?v=0.8.5', './admin.css?v=0.8.5',
-  './recipe-save.css?v=0.8.5', './layout-fixes.css?v=0.8.5', './community.css?v=0.8.5', './confirmation-ui.css?v=0.8.5', './notifications.css?v=0.8.5',
-  './private-gate.js?v=0.8.5', './recetario-config.js?v=0.8.5', './app.js?v=0.8.5',
-  './recipe-save.js?v=0.8.5', './supabase-sync.js?v=0.8.5', './account.js?v=0.8.5', './admin.js?v=0.8.5',
-  './recipe-community.js?v=0.8.5', './recipe-metadata.js?v=0.8.5', './recipe-defaults.js?v=0.8.5',
-  './family-actions.js?v=0.8.5', './admin-enhancements.js?v=0.8.5', './confirmation-ui.js?v=0.8.5',
-  './account-header.js?v=0.8.5', './notifications.js?v=0.8.5',
+  './styles.css?v=0.8.6', './supabase.css?v=0.8.6', './account.css?v=0.8.6', './admin.css?v=0.8.6',
+  './recipe-save.css?v=0.8.6', './layout-fixes.css?v=0.8.6', './community.css?v=0.8.6', './confirmation-ui.css?v=0.8.6', './notifications.css?v=0.8.6',
+  './private-gate.js?v=0.8.6', './recetario-config.js?v=0.8.6', './app.js?v=0.8.6',
+  './recipe-save.js?v=0.8.6', './supabase-sync.js?v=0.8.6', './account.js?v=0.8.6', './admin.js?v=0.8.6',
+  './recipe-community.js?v=0.8.6', './recipe-metadata.js?v=0.8.6', './recipe-defaults.js?v=0.8.6',
+  './family-actions.js?v=0.8.6', './admin-enhancements.js?v=0.8.6', './confirmation-ui.js?v=0.8.6',
+  './account-header.js?v=0.8.6', './notifications.js?v=0.8.6',
   './manifest.webmanifest', './assets/recetario.svg'
 ];
 
