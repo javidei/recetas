@@ -147,12 +147,106 @@
 .notifications-error { color: #8d3131; background: #fff0f0; }
 
 @media (max-width: 660px) {
-  .notifications-panel {
-    top: 76px;
-    right: 10px;
-    width: calc(100vw - 20px);
-    max-height: calc(100dvh - 90px);
+  /* Portada: campana compacta + Mi cuenta en la primera fila y Nueva receta debajo. */
+  .header-actions.has-notifications {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: 8px !important;
   }
-  .notifications-list { max-height: calc(100dvh - 200px); }
-  .notifications-toolbar { align-items: flex-start; flex-direction: column; }
+  .header-actions.has-notifications .notifications-button {
+    grid-column: 1;
+    grid-row: 1;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+  .header-actions.has-notifications .account-button {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+  }
+  .header-actions.has-notifications #new-recipe-button {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  /* Administración: evita que la campana fuerce una tercera columna estrecha. */
+  .admin-header-actions.has-notifications {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+  .admin-header-actions.has-notifications .notifications-button {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .admin-header-actions.has-notifications .button:first-of-type {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+  }
+  .admin-header-actions.has-notifications .button:last-of-type {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  /* Mi cuenta: marca una fila propia para logo/campana y deja Volver debajo. */
+  .header-inner.has-notifications-direct {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) 44px;
+    align-items: center;
+    gap: 10px;
+    padding-block: 10px;
+  }
+  .header-inner.has-notifications-direct .brand {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+  .header-inner.has-notifications-direct > .notifications-button {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .header-inner.has-notifications-direct > a.button {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .notifications-button__icon { font-size: 1.05rem; }
+  .notifications-badge {
+    top: -4px;
+    right: -4px;
+    min-width: 19px;
+    height: 19px;
+    padding-inline: 4px;
+    font-size: .62rem;
+  }
+
+  /* En móvil funciona como una hoja inferior y no tapa el header. */
+  .notifications-panel {
+    top: auto;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: auto;
+    max-height: min(72dvh, 620px);
+    border-radius: 22px;
+  }
+  .notifications-list { max-height: calc(72dvh - 150px); }
+  .notifications-panel__header { padding: 16px 16px 12px; }
+  .notifications-panel__header h2 { font-size: 1.5rem; }
+  .notifications-toolbar {
+    padding: 10px 16px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
 }
