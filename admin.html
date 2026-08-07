@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#8f3d2f">
+  <meta name="description" content="Administración de cuentas del Recetario de Javi.">
+  <title>Administración · Recetario de Javi</title>
+  <link rel="icon" href="assets/recetario.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=0.4.0">
+  <link rel="stylesheet" href="admin.css?v=0.4.0">
+  <script defer src="recetario-config.js?v=0.4.0"></script>
+  <script defer src="admin.js?v=0.4.0"></script>
+</head>
+<body class="admin-page">
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="./" aria-label="Volver al recetario">
+        <img src="assets/recetario.svg" alt="" width="46" height="46">
+        <span><strong>Recetario de Javi</strong><small>Administración</small></span>
+      </a>
+      <div class="admin-header-actions">
+        <a class="button button--soft" href="cuenta.html">Mi cuenta</a>
+        <a class="button" href="./">Ver recetas</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="contenido" class="shell admin-main">
+    <section class="admin-hero">
+      <span class="eyebrow">Solo administrador</span>
+      <h1>Gestionar cuentas del recetario</h1>
+      <p>Desde aquí puedes ver las cuentas que pertenecen a esta aplicación, su familia y cuántas recetas han creado. El límite es de 10 cuentas activas.</p>
+    </section>
+
+    <section class="admin-stats" aria-label="Resumen de cuentas">
+      <article><strong id="active-count">—</strong><span>Cuentas activas</span></article>
+      <article><strong id="available-count">—</strong><span>Huecos disponibles</span></article>
+      <article><strong id="recipe-count">—</strong><span>Recetas guardadas</span></article>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-card-heading">
+        <div>
+          <span class="eyebrow">Familiares</span>
+          <h2>Cuentas registradas</h2>
+        </div>
+        <button class="button button--soft" id="refresh-button" type="button">Actualizar</button>
+      </div>
+
+      <p class="admin-message" id="admin-message" aria-live="polite">Cargando cuentas…</p>
+      <div class="account-list" id="account-list"></div>
+    </section>
+
+    <section class="admin-note">
+      <strong>Qué puedes gestionar aquí</strong>
+      <p>Puedes activar o desactivar el acceso al recetario. Las contraseñas no se muestran ni se almacenan en esta web; las gestiona Supabase Auth.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div><strong>Recetario de Javi</strong><span>Administración privada de cuentas familiares</span></div>
+      <div class="version-block"><span>Versión <strong>0.4.0</strong></span><span>07/08/2026</span></div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
