@@ -1,4 +1,4 @@
-/* Guardado y confirmación · v0.5.0 */
+/* Guardado y confirmación · v0.6.0 */
 .save-error-box {
   margin: 4px 0 18px;
   padding: 14px 16px;
@@ -82,6 +82,13 @@
 .share-confirmation-toggle small { display: block; }
 .share-confirmation-toggle small { margin-top: 3px; color: #617058; }
 .share-confirmation-toggle:has(input:disabled) { opacity: .62; cursor: default; }
+
+.confirmation-family-field {
+  margin-top: 12px;
+  display: grid;
+  gap: 6px;
+}
+.confirmation-family-field[hidden] { display: none !important; }
 
 .save-confirmation-status {
   min-height: 24px;
