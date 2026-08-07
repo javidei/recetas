@@ -1,18 +1,24 @@
 # Changelog
 
+## 0.8.1 — 07/08/2026
+
+- Corregido el solape del aviso de receta familiar con las tarjetas de Nota, Preparación, Cocinado, Dificultad y Raciones.
+- Las seis recetas iniciales pasan a poder integrarse como registros reales de Supabase mediante `011_recetas_por_defecto.sql`.
+- Las recetas base se identifican visualmente como **Receta por defecto** en tarjeta y detalle.
+- Una vez migradas a Supabase admiten comentarios, respuestas y likes igual que el resto de recetas.
+- Las recetas por defecto son comunes a todas las cuentas activas, pero no pueden editarse ni eliminarse desde la aplicación.
+- Se evita que las seis recetas base aparezcan duplicadas cuando ya existen sus versiones remotas.
+- Los comentarios principales de recetas por defecto no generan una notificación falsa al administrador técnico; las respuestas siguen notificando al usuario correspondiente.
+
 ## 0.8.0 — 07/08/2026
 
-- El popup de detalle de una receta ya no se cierra al pulsar accidentalmente fuera.
-- Corregida la superposición visual del bloque de autor y fechas con las tarjetas de Nota, Preparación, Cocinado, Dificultad y Raciones.
-- Botón «Cancelar respuesta» rediseñado para integrarse con la interfaz.
-- La sección completa de comentarios puede plegarse y desplegarse.
-- Los hilos con respuestas pueden plegarse de forma independiente.
-- Añadidos likes a comentarios, con contador y estado personal.
-- Añadido centro de notificaciones interno mediante campana y contador de pendientes.
-- Se genera una notificación cuando otra persona comenta una receta propia.
-- Se genera una notificación cuando otra persona responde a un comentario propio.
-- Las notificaciones permiten abrir directamente la receta relacionada y marcarlas como leídas.
-- Añadida `supabase/010_likes_notificaciones.sql` con tablas, triggers y políticas RLS para likes y notificaciones.
+- El popup de detalle de receta ya no se cierra al pulsar accidentalmente fuera.
+- Los comentarios pueden plegarse por completo y también por hilos de respuestas.
+- Añadidos likes a comentarios.
+- Mejorado el botón de cancelar respuesta.
+- Añadidas notificaciones internas para comentarios en recetas propias y respuestas a comentarios.
+- Corregida la posición inicial de los metadatos de autor y fechas respecto a las estadísticas de la receta.
+- Añadida `supabase/010_likes_notificaciones.sql`.
 
 ## 0.7.0 — 07/08/2026
 
