@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0 — 07/08/2026
+
+- Máximo de 3 familias por cuenta normal; la cuenta administradora general queda exenta.
+- El creador de una familia puede eliminar únicamente los grupos que ha creado.
+- El administrador general puede eliminar cualquier familia.
+- El borrado de una familia convierte antes en privadas las recetas que estaban compartidas con ese grupo.
+- Corrección visual de avatares e iconos de familia en administración, con iniciales como respaldo si una imagen falla.
+- Las tarjetas de receta muestran autor y fecha de última actualización.
+- El detalle de receta muestra autor, fecha de creación y fecha de modificación cuando existe.
+- Nueva sección de comentarios en recetas almacenadas en Supabase.
+- Los comentarios permiten respuestas anidadas y nuevas respuestas sobre esas respuestas.
+- El autor de un comentario puede eliminarlo; el administrador general también puede hacerlo.
+- Añadida `supabase/007_familias_comentarios.sql` con límites, borrado seguro y estructura RLS de comentarios.
+
 ## 0.6.0 — 07/08/2026
 
 - Footer anclado al final de la ventana mediante un layout común compatible con `100vh` y `100dvh`.
