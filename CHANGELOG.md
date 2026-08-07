@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.0 — 07/08/2026
+
+- Footer anclado al final de la ventana mediante un layout común compatible con `100vh` y `100dvh`.
+- Las cuentas pueden pertenecer a varias familias; se elimina la restricción de una única familia por usuario.
+- Al compartir una receta se elige exactamente en qué familia será visible.
+- El popup de guardado también permite escoger o cambiar la familia de destino.
+- El administrador ve todas las familias asociadas a cada cuenta.
+- Nueva sección de administración de familias con cambio de nombre desde `admin.html`.
+- Perfil ampliado con nombre de usuario único y foto propia.
+- Las fotos de perfil se recortan al centro y se reducen a 512×512 antes de almacenarse en el bucket privado `recipe-avatars`.
+- Inicio de sesión mediante correo o nombre de usuario.
+- Añadida la Edge Function independiente `recetario-username-login`, siguiendo el patrón de Book Affinity sin sobrescribir su función.
+- Añadida `supabase/006_perfiles_multifamilia.sql` con columnas, permisos, almacenamiento, funciones y cambios de familias múltiples.
+
 ## 0.5.0 — 07/08/2026
 
 - Guardado reforzado: antes de insertar se valida que la sesión pertenece a una cuenta activa del Recetario.
