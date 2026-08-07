@@ -4,7 +4,7 @@
 window.RECETARIO_CONFIG = Object.freeze({
   supabaseUrl: 'https://avboupigkstzprrgvlhr.supabase.co',
   supabasePublishableKey: 'sb_publishable_eyFLhKFk9HXAab4q1cxG4A_-_la1-OI',
-  version: '0.8.4',
+  version: '0.8.5',
   releaseDate: '07/08/2026'
 });
 
@@ -33,29 +33,29 @@ window.RECETARIO_CONFIG = Object.freeze({
     document.body.appendChild(script);
   }
 
-  addStyle('layout-fixes.css?v=0.8.4', 'layout');
-  addStyle('community.css?v=0.8.4', 'community');
-  addStyle('confirmation-ui.css?v=0.8.4', 'confirmation-ui');
-  addStyle('notifications.css?v=0.8.4', 'notifications');
+  addStyle('layout-fixes.css?v=0.8.5', 'layout');
+  addStyle('community.css?v=0.8.5', 'community');
+  addStyle('confirmation-ui.css?v=0.8.5', 'confirmation-ui');
+  addStyle('notifications.css?v=0.8.5', 'notifications');
 
   window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.version-block strong').forEach(node => { node.textContent = config.version; });
-    addScript('confirmation-ui.js?v=0.8.4', 'confirmation-ui');
+    addScript('confirmation-ui.js?v=0.8.5', 'confirmation-ui');
   });
 
   window.addEventListener('load', () => {
     const path = window.location.pathname;
     if (/\/cuenta\.html$/i.test(path)) {
-      addScript('account-header.js?v=0.8.4', 'account-header');
-      addScript('family-actions.js?v=0.8.4', 'family-actions');
+      addScript('account-header.js?v=0.8.5', 'account-header');
+      addScript('family-actions.js?v=0.8.5', 'family-actions');
     } else if (/\/admin\.html$/i.test(path)) {
-      addScript('admin-enhancements.js?v=0.8.4', 'admin-enhancements');
+      addScript('admin-enhancements.js?v=0.8.5', 'admin-enhancements');
     } else {
-      addScript('recipe-community.js?v=0.8.4', 'recipe-community');
-      addScript('recipe-metadata.js?v=0.8.4', 'recipe-metadata');
-      addScript('recipe-defaults.js?v=0.8.4', 'recipe-defaults');
+      addScript('recipe-community.js?v=0.8.5', 'recipe-community');
+      addScript('recipe-metadata.js?v=0.8.5', 'recipe-metadata');
+      addScript('recipe-defaults.js?v=0.8.5', 'recipe-defaults');
     }
-    addScript('notifications.js?v=0.8.4', 'notifications');
+    addScript('notifications.js?v=0.8.5', 'notifications');
   });
 
   window.fetch = function recetarioFetch(input, options) {
@@ -92,6 +92,7 @@ window.RECETARIO_CONFIG = Object.freeze({
 
   const url = `${config.supabaseUrl}/rest/v1/recetario_accounts?id=eq.${encodeURIComponent(session.user.id)}&select=id,is_active&limit=1`;
   nativeFetch(url, {
+    cache: 'no-store',
     headers: {
       apikey: config.supabasePublishableKey,
       Authorization: `Bearer ${session.access_token}`
