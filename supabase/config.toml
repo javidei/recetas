@@ -2,3 +2,6 @@ project_id = "avboupigkstzprrgvlhr"
 
 [functions.recetario-username-login]
 verify_jwt = false
+
+[functions.recetario-recipe-ai]
+verify_jwt = true
