@@ -7,12 +7,10 @@
   <meta name="description" content="Cuenta familiar del Recetario de Javi.">
   <title>Mi cuenta · Recetario de Javi</title>
   <link rel="icon" href="assets/recetario.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=0.3.1">
-  <link rel="stylesheet" href="account.css?v=0.3.1">
-  <script defer src="recetario-config.js?v=0.3.1"></script>
-  <script defer src="account-bootstrap.js?v=0.3.1"></script>
-  <script defer src="account-compat.js?v=0.3.1"></script>
-  <script defer src="account.js?v=0.3.1"></script>
+  <link rel="stylesheet" href="styles.css?v=0.4.0">
+  <link rel="stylesheet" href="account.css?v=0.4.0">
+  <script defer src="recetario-config.js?v=0.4.0"></script>
+  <script defer src="account.js?v=0.4.0"></script>
 </head>
 <body class="account-page">
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -30,7 +28,7 @@
     <section class="account-hero">
       <span class="eyebrow">Tu espacio privado</span>
       <h1>Una cuenta para cocinar en familia.</h1>
-      <p>Regístrate para guardar tus recetas en la nube, compartirlas con tu familia y consultarlas desde cualquier dispositivo.</p>
+      <p>Accede o crea una cuenta para entrar al recetario. Sin sesión iniciada no se muestra el catálogo ni ninguna receta.</p>
     </section>
 
     <section class="account-card auth-card" id="guest-section">
@@ -54,7 +52,7 @@
         <div class="account-heading">
           <span class="eyebrow">Nueva cuenta</span>
           <h2>Únete al recetario</h2>
-          <p>Después podrás crear una familia o entrar usando el código que te hayan enviado.</p>
+          <p>Hay un máximo de 10 cuentas activas. Después podrás crear una familia o entrar usando un código de invitación.</p>
         </div>
         <label class="field"><span>Nombre</span><input id="register-name" type="text" autocomplete="name" maxlength="60" required placeholder="Ej.: María"></label>
         <label class="field"><span>Correo electrónico</span><input id="register-email" type="email" autocomplete="email" required></label>
@@ -77,6 +75,7 @@
             <label class="field"><span>Nombre visible</span><input id="profile-name-input" maxlength="60" required></label>
             <button class="button button--soft" type="submit">Guardar nombre</button>
           </form>
+          <a class="button admin-link" id="admin-link" href="admin.html" hidden>Administrar cuentas</a>
           <button class="text-button danger-text" id="logout-button" type="button">Cerrar sesión</button>
         </article>
 
@@ -113,10 +112,6 @@
           </div>
 
           <p class="account-message" id="family-message" aria-live="polite"></p>
-          <div class="migration-warning" id="migration-warning" hidden>
-            <strong>La estructura familiar necesita una reparación.</strong>
-            <span>Ejecuta el archivo <code>supabase/003_reparar_familias.sql</code> en Supabase.</span>
-          </div>
         </article>
       </div>
 
@@ -124,7 +119,7 @@
         <div>
           <span class="eyebrow">Recetas de este navegador</span>
           <h2>Guardar recetas locales en tu cuenta</h2>
-          <p id="local-recipes-copy">Tienes recetas creadas antes de iniciar sesión. Puedes subirlas a tu cuenta para no perderlas y poder compartirlas después.</p>
+          <p id="local-recipes-copy">Tienes recetas creadas antes de iniciar sesión. Puedes subirlas a tu cuenta para no perderlas.</p>
         </div>
         <button class="button" id="migrate-local-button" type="button">Guardar en mi cuenta</button>
       </article>
@@ -134,7 +129,7 @@
   <footer class="site-footer">
     <div class="shell footer-inner">
       <div><strong>Recetario de Javi</strong><span>Cuentas privadas y recetas familiares con Supabase</span></div>
-      <div class="version-block"><span>Versión <strong>0.3.1</strong></span><span>07/08/2026</span></div>
+      <div class="version-block"><span>Versión <strong>0.4.0</strong></span><span>07/08/2026</span></div>
     </div>
   </footer>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
