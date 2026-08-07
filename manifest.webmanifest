@@ -1,6 +1,6 @@
 {
-  "name": "Recetario de Javi",
-  "short_name": "Recetario",
+  "name": "El Recetario",
+  "short_name": "El Recetario",
   "description": "Recetas propias, buscador por ingredientes y fichas detalladas.",
   "start_url": "./",
   "scope": "./",
