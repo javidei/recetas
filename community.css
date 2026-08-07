@@ -130,10 +130,16 @@
   font-weight: 900;
   letter-spacing: .03em;
 }
+.admin-family { grid-template-columns: minmax(0,1fr) minmax(220px,.6fr) auto auto; }
 .admin-family__delete {
   color: #8d3131;
   background: #f6dddd;
   box-shadow: none;
+}
+
+@media (max-width: 1000px) {
+  .admin-family { grid-template-columns: 1fr auto auto; }
+  .admin-family__info { grid-column: 1 / -1; }
 }
 
 @media (max-width: 660px) {
@@ -142,4 +148,7 @@
   .comment-avatar { width: 34px; height: 34px; border-radius: 10px; }
   .comment-form-actions { align-items: stretch; flex-direction: column-reverse; }
   .comment-form-actions .button { width: 100%; }
+  .admin-family { grid-template-columns: 1fr; }
+  .admin-family__info { grid-column: auto; }
+  .admin-family .button { width: 100%; }
 }
