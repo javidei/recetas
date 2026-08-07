@@ -4,7 +4,7 @@
 window.RECETARIO_CONFIG = Object.freeze({
   supabaseUrl: 'https://avboupigkstzprrgvlhr.supabase.co',
   supabasePublishableKey: 'sb_publishable_eyFLhKFk9HXAab4q1cxG4A_-_la1-OI',
-  version: '0.7.0',
+  version: '0.7.1',
   releaseDate: '07/08/2026'
 });
 
@@ -28,26 +28,29 @@ window.RECETARIO_CONFIG = Object.freeze({
     if (document.querySelector(`script[data-recetario-script="${key}"]`)) return;
     const script = document.createElement('script');
     script.src = src;
+    script.async = false;
     script.dataset.recetarioScript = key;
     document.body.appendChild(script);
   }
 
-  addStyle('layout-fixes.css?v=0.7.0', 'layout');
-  addStyle('community.css?v=0.7.0', 'community');
+  addStyle('layout-fixes.css?v=0.7.1', 'layout');
+  addStyle('community.css?v=0.7.1', 'community');
+  addStyle('confirmation-ui.css?v=0.7.1', 'confirmation-ui');
 
   window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.version-block strong').forEach(node => { node.textContent = config.version; });
+    addScript('confirmation-ui.js?v=0.7.1', 'confirmation-ui');
   });
 
   window.addEventListener('load', () => {
     const path = window.location.pathname;
     if (/\/cuenta\.html$/i.test(path)) {
-      addScript('family-actions.js?v=0.7.0', 'family-actions');
+      addScript('family-actions.js?v=0.7.1', 'family-actions');
     } else if (/\/admin\.html$/i.test(path)) {
-      addScript('admin-enhancements.js?v=0.7.0', 'admin-enhancements');
+      addScript('admin-enhancements.js?v=0.7.1', 'admin-enhancements');
     } else {
-      addScript('recipe-community.js?v=0.7.0', 'recipe-community');
-      addScript('recipe-metadata.js?v=0.7.0', 'recipe-metadata');
+      addScript('recipe-community.js?v=0.7.1', 'recipe-community');
+      addScript('recipe-metadata.js?v=0.7.1', 'recipe-metadata');
     }
   });
 
