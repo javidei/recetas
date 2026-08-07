@@ -6,14 +6,11 @@
   if (!config) return;
 
   let activeResolver = null;
+  let keepOpenAfterAccept = false;
 
   function session() {
     try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
     catch { return null; }
-  }
-
-  function escapeHtml(value = '') {
-    return String(value).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
   }
 
   function ensureDialog() {
@@ -43,7 +40,9 @@
       if (!activeResolver) return;
       const resolve = activeResolver;
       activeResolver = null;
-      if (dialog.open) dialog.close();
+      if (!result || !keepOpenAfterAccept) {
+        if (dialog.open) dialog.close();
+      }
       resolve(result);
     };
 
@@ -51,6 +50,7 @@
     dialog.querySelector('#recetario-confirm-accept').addEventListener('click', () => finish(true));
     dialog.addEventListener('cancel', event => {
       event.preventDefault();
+      if (dialog.querySelector('#recetario-confirm-accept').disabled) return;
       finish(false);
     });
     dialog.addEventListener('click', event => {
@@ -58,6 +58,7 @@
     });
     dialog.addEventListener('close', () => {
       document.body.classList.remove('has-modal');
+      keepOpenAfterAccept = false;
       if (activeResolver) {
         const resolve = activeResolver;
         activeResolver = null;
@@ -77,6 +78,7 @@
       dialog.close();
     }
 
+    keepOpenAfterAccept = Boolean(options.keepOpenAfterAccept);
     const variant = options.variant === 'success' ? 'success' : 'danger';
     dialog.className = `recetario-confirm recetario-confirm--${variant}`;
     dialog.querySelector('#recetario-confirm-icon').textContent = options.icon || (variant === 'danger' ? '!' : '✓');
@@ -93,20 +95,10 @@
     dialog.querySelector('#recetario-confirm-accept').disabled = false;
 
     document.body.classList.add('has-modal');
-    dialog.showModal();
+    if (!dialog.open) dialog.showModal();
     requestAnimationFrame(() => dialog.querySelector('#recetario-confirm-cancel').focus());
 
     return new Promise(resolve => { activeResolver = resolve; });
-  };
-
-  window.recetarioNotice = async function recetarioNotice(options = {}) {
-    const accepted = await window.recetarioConfirm({
-      ...options,
-      variant: options.variant || 'success',
-      cancelLabel: '',
-      confirmLabel: options.confirmLabel || 'Aceptar'
-    });
-    return accepted;
   };
 
   function setDialogBusy(busy, status = '') {
@@ -114,6 +106,15 @@
     dialog.querySelector('#recetario-confirm-cancel').disabled = busy;
     dialog.querySelector('#recetario-confirm-accept').disabled = busy;
     dialog.querySelector('#recetario-confirm-status').textContent = status;
+  }
+
+  function setDialogError(message) {
+    const dialog = ensureDialog();
+    dialog.querySelector('#recetario-confirm-cancel').disabled = false;
+    dialog.querySelector('#recetario-confirm-accept').disabled = false;
+    dialog.querySelector('#recetario-confirm-status').textContent = message;
+    dialog.querySelector('#recetario-confirm-status').dataset.error = 'true';
+    dialog.querySelector('#recetario-confirm-cancel').textContent = 'Cerrar';
   }
 
   async function rpc(name, body = {}) {
@@ -132,7 +133,7 @@
       let message = `Error ${response.status}`;
       try {
         const data = await response.json();
-        message = data.message || data.error || data.msg || message;
+        message = data.message || data.error || data.msg || data.hint || message;
       } catch {}
       throw new Error(message);
     }
@@ -165,26 +166,39 @@
   async function confirmDeleteFamily(button, adminView) {
     const card = button.closest('.family-group-card, .admin-family');
     const name = card?.querySelector('h3, .admin-family__info strong')?.textContent?.trim() || 'esta familia';
+    const familyId = button.dataset.deleteFamily || button.dataset.adminDeleteFamily;
+    if (!familyId) return;
+
     const accepted = await window.recetarioConfirm({
       eyebrow: 'Eliminar familia',
       title: `¿Eliminar “${name}”?`,
       message: 'El grupo desaparecerá para todos sus miembros.',
       warning: 'Las recetas compartidas con esta familia no se borrarán: pasarán automáticamente a ser privadas.',
       confirmLabel: 'Sí, eliminar familia',
-      icon: '×'
+      icon: '×',
+      keepOpenAfterAccept: true
     });
     if (!accepted) return;
 
     setDialogBusy(true, 'Eliminando familia…');
     try {
-      await rpc('delete_recipe_family', {
-        target_family_id: button.dataset.deleteFamily || button.dataset.adminDeleteFamily
-      });
-      ensureDialog().close();
-      if (adminView) document.querySelector('#refresh-button')?.click();
-      else location.reload();
+      await rpc('delete_recipe_family', { target_family_id: familyId });
+      const dialog = ensureDialog();
+      dialog.querySelector('#recetario-confirm-status').dataset.error = 'false';
+      dialog.querySelector('#recetario-confirm-status').textContent = 'Familia eliminada correctamente.';
+
+      // Quitamos la tarjeta inmediatamente para que la acción sea visible incluso
+      // antes de que termine una recarga o la actualización del panel.
+      card?.remove();
+      if (dialog.open) dialog.close();
+
+      if (adminView) {
+        document.querySelector('#refresh-button')?.click();
+      } else {
+        location.reload();
+      }
     } catch (error) {
-      setDialogBusy(false, `No se pudo eliminar: ${error.message}`);
+      setDialogError(`No se pudo eliminar la familia: ${error.message}`);
     }
   }
 
@@ -201,7 +215,8 @@
       warning: active ? '' : 'Sus recetas y comentarios no se eliminan; únicamente se bloquea el acceso.',
       confirmLabel: active ? 'Sí, reactivar' : 'Sí, desactivar',
       variant: active ? 'success' : 'danger',
-      icon: active ? '✓' : '!'
+      icon: active ? '✓' : '!',
+      keepOpenAfterAccept: true
     });
     if (!accepted) return;
 
@@ -214,7 +229,7 @@
       ensureDialog().close();
       document.querySelector('#refresh-button')?.click();
     } catch (error) {
-      setDialogBusy(false, `No se pudo cambiar la cuenta: ${error.message}`);
+      setDialogError(`No se pudo cambiar la cuenta: ${error.message}`);
     }
   }
 
@@ -229,7 +244,8 @@
         ? `También se eliminarán ${nestedCount} ${nestedCount === 1 ? 'respuesta anidada' : 'respuestas anidadas'} que dependen de él.`
         : '',
       confirmLabel: 'Sí, eliminar comentario',
-      icon: '×'
+      icon: '×',
+      keepOpenAfterAccept: true
     });
     if (!accepted) return;
 
@@ -246,7 +262,7 @@
       }
       ensureDialog().close();
     } catch (error) {
-      setDialogBusy(false, `No se pudo eliminar: ${error.message}`);
+      setDialogError(`No se pudo eliminar el comentario: ${error.message}`);
     }
   }
 
@@ -261,16 +277,20 @@
       message: 'La receta desaparecerá de tu recetario.',
       warning: 'También se eliminarán sus ingredientes, pasos, comentarios y la imagen almacenada. Esta acción no se puede deshacer.',
       confirmLabel: 'Sí, eliminar receta',
-      icon: '×'
+      icon: '×',
+      keepOpenAfterAccept: true
     });
     if (!accepted) return;
 
-    ensureDialog().close();
+    setDialogBusy(true, 'Eliminando receta…');
     const originalConfirm = window.confirm;
     window.confirm = () => true;
     try {
       const result = typeof deleteRecipe === 'function' ? deleteRecipe(id) : null;
-      if (result && typeof result.then === 'function') result.catch(error => console.error(error));
+      if (result && typeof result.then === 'function') await result;
+      ensureDialog().close();
+    } catch (error) {
+      setDialogError(`No se pudo eliminar la receta: ${error.message}`);
     } finally {
       window.confirm = originalConfirm;
     }
