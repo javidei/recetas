@@ -55,6 +55,17 @@
     return text ? JSON.parse(text) : null;
   }
 
+  async function accountRole(session) {
+    const response = await request(
+      `${config.supabaseUrl}/rest/v1/recetario_accounts?id=eq.${encodeURIComponent(session.user.id)}&select=role&limit=1`,
+      { headers: headers(session) },
+      12000
+    );
+    if (!response.ok) return 'member';
+    const rows = await response.json();
+    return rows?.[0]?.role || 'member';
+  }
+
   function settingsRow(payload) {
     if (Array.isArray(payload)) return payload[0] || {};
     return payload && typeof payload === 'object' ? payload : {};
@@ -81,7 +92,7 @@
         <div>
           <span class="eyebrow">Funciones experimentales</span>
           <h2>Importar recetas con IA</h2>
-          <p>Permite subir una fotografía de una receta para extraer sus datos y rellenar automáticamente el formulario. La receta nunca se guarda sin revisión.</p>
+          <p>La cuenta administradora siempre puede usar la IA. Este control decide si también estará disponible para el resto de usuarios.</p>
         </div>
         <span class="ai-badge">IA</span>
       </div>
@@ -89,13 +100,13 @@
         <input id="ai-recipe-enabled-checkbox" type="checkbox">
         <span class="ai-admin-toggle__track" aria-hidden="true"><span></span></span>
         <span class="ai-admin-toggle__copy">
-          <strong>Activar “Rellenar desde foto con IA”</strong>
+          <strong>Permitir IA al resto de usuarios</strong>
           <small id="ai-recipe-enabled-help">Cargando ajuste…</small>
         </span>
       </label>
       <div class="ai-admin-note">
-        <strong>Controlado desde Administración.</strong>
-        <span>Cuando esté desactivado, ningún usuario verá ni podrá utilizar la importación con IA. La clave de Gemini permanece protegida dentro de Supabase.</span>
+        <strong>Tu acceso como administrador permanece siempre activo.</strong>
+        <span>Al desmarcar el interruptor solo se oculta y bloquea la IA para las cuentas normales. Tu cuenta seguirá viendo “Rellenar desde foto con IA”.</span>
       </div>
       <p class="ai-admin-status" id="ai-recipe-admin-status" aria-live="polite"></p>`;
 
@@ -108,8 +119,8 @@
     function paint(enabled) {
       checkbox.checked = Boolean(enabled);
       help.textContent = enabled
-        ? 'Los usuarios pueden usar una foto para rellenar una receta nueva.'
-        : 'La función de IA está oculta y bloqueada para todos los usuarios.';
+        ? 'Los usuarios normales también pueden usar una foto para rellenar una receta.'
+        : 'Solo la cuenta administradora puede utilizar la IA.';
     }
 
     try {
@@ -130,8 +141,8 @@
         const result = await rpc(session, 'admin_set_ai_recipe_photo_enabled', { target_enabled: desired });
         paint(Boolean(result));
         setStatus(status, desired
-          ? 'IA activada. Ya puede aparecer en el formulario de nueva receta.'
-          : 'IA desactivada para todos los usuarios.');
+          ? 'La IA está disponible para el administrador y para el resto de usuarios.'
+          : 'La IA queda disponible únicamente para el administrador.');
       } catch (error) {
         paint(!desired);
         setStatus(status, `No se pudo guardar: ${error.message}`, true);
@@ -243,7 +254,6 @@
     else warnings.push('No se han detectado pasos con claridad.');
     fillInput('#recipe-notes', recipe.notes);
     fillInput('#recipe-emoji', chooseEmoji(recipe));
-
     if (Array.isArray(recipe.warnings)) warnings.push(...recipe.warnings.filter(Boolean));
     return [...new Set(warnings)];
   }
@@ -308,37 +318,50 @@
     const header = form?.querySelector('.form-header');
     if (!form || !header || form.querySelector('#ai-recipe-import')) return;
 
-    let settings;
+    let settings = {};
+    let role = 'member';
     try {
-      settings = settingsRow(await rpc(session, 'get_recetario_ui_settings'));
+      [settings, role] = await Promise.all([
+        rpc(session, 'get_recetario_ui_settings').then(settingsRow),
+        accountRole(session)
+      ]);
     } catch {
-      return; // Compatibilidad mientras no se haya ejecutado 014.
+      return;
     }
-    if (!settings.ai_recipe_photo_enabled) return;
 
-    const panel = document.createElement('section');
+    const isAdmin = role === 'admin';
+    const enabledForMembers = Boolean(settings.ai_recipe_photo_enabled);
+    if (!isAdmin && !enabledForMembers) return;
+
+    const panel = document.createElement('details');
     panel.className = 'ai-recipe-import';
     panel.id = 'ai-recipe-import';
     panel.innerHTML = `
-      <div class="ai-recipe-import__heading">
-        <div>
+      <summary class="ai-recipe-import__summary">
+        <span class="ai-recipe-import__summary-copy">
           <span class="eyebrow">IA · Experimental</span>
           <strong>Rellenar desde una fotografía</strong>
-          <p>Fotografía una receta de un libro, revista o papel y la IA intentará completar este formulario por ti.</p>
+          <small>${isAdmin && !enabledForMembers ? 'Disponible para ti como administrador' : 'Foto → datos del formulario'}</small>
+        </span>
+        <span class="ai-recipe-import__summary-side">
+          <span class="ai-badge">✨ IA</span>
+          <span class="ai-recipe-chevron" aria-hidden="true">⌄</span>
+        </span>
+      </summary>
+      <div class="ai-recipe-import__content">
+        <p class="ai-recipe-import__intro">Fotografía una receta de un libro, revista o papel y la IA intentará completar este formulario por ti.</p>
+        <div class="ai-recipe-import__body">
+          <label class="ai-photo-picker">
+            <input id="ai-recipe-photo" type="file" accept="image/*">
+            <span class="ai-photo-picker__icon" aria-hidden="true">📷</span>
+            <span><strong>Elegir o hacer una foto</strong><small>La imagen se reduce antes de enviarse y no se guarda como portada.</small></span>
+          </label>
+          <img id="ai-recipe-preview" class="ai-recipe-preview" alt="Vista previa de la receta fotografiada" hidden>
+          <button class="button ai-recipe-analyze" id="ai-recipe-analyze" type="button" disabled>Analizar y rellenar formulario</button>
         </div>
-        <span class="ai-badge">✨ IA</span>
-      </div>
-      <div class="ai-recipe-import__body">
-        <label class="ai-photo-picker">
-          <input id="ai-recipe-photo" type="file" accept="image/*">
-          <span class="ai-photo-picker__icon" aria-hidden="true">📷</span>
-          <span><strong>Elegir o hacer una foto</strong><small>La imagen se reduce antes de enviarse y no se guarda como portada.</small></span>
-        </label>
-        <img id="ai-recipe-preview" class="ai-recipe-preview" alt="Vista previa de la receta fotografiada" hidden>
-        <button class="button ai-recipe-analyze" id="ai-recipe-analyze" type="button" disabled>Analizar y rellenar formulario</button>
-      </div>
-      <p class="ai-recipe-status" id="ai-recipe-status" aria-live="polite">Selecciona una imagen nítida en la que se lean título, ingredientes y preparación.</p>
-      <p class="ai-recipe-privacy">La IA puede equivocarse. Comprueba cantidades, tiempos y pasos antes de guardar.</p>`;
+        <p class="ai-recipe-status" id="ai-recipe-status" aria-live="polite">Selecciona una imagen nítida en la que se lean título, ingredientes y preparación.</p>
+        <p class="ai-recipe-privacy">La IA puede equivocarse. Comprueba cantidades, tiempos y pasos antes de guardar.</p>
+      </div>`;
 
     header.after(panel);
 
