@@ -1,10 +1,10 @@
-# Recetario de Javi
+# El Recetario
 
 Aplicación web responsive y privada para guardar recetas propias, buscarlas por varios ingredientes y compartirlas dentro de uno o varios grupos familiares.
 
 ## Versión actual
 
-**0.7.0 · 07/08/2026**
+**0.8.3 · 07/08/2026**
 
 ## Incluido
 
@@ -15,6 +15,8 @@ Aplicación web responsive y privada para guardar recetas propias, buscarlas por
 - Autor visible en tarjetas y detalles de cada receta.
 - Fecha de última actualización en tarjeta; creación y modificaciones en detalle.
 - Comentarios en recetas con respuestas anidadas.
+- Likes en comentarios y notificaciones internas.
+- Recetas por defecto integradas en Supabase y comentables.
 - Popup de confirmación de guardado con control de visibilidad familiar.
 - Acceso obligatorio: sin sesión no se muestra el catálogo.
 - Inicio de sesión por correo electrónico o nombre de usuario.
@@ -25,11 +27,10 @@ Aplicación web responsive y privada para guardar recetas propias, buscarlas por
 - Quien crea una familia puede eliminarla; el administrador general puede eliminar cualquiera.
 - Al eliminar una familia, sus recetas compartidas pasan a privadas antes de borrar el grupo.
 - Al compartir una receta se elige exactamente en qué familia será visible.
-- Máximo de 10 cuentas activas del recetario.
+- Máximo de 10 cuentas activas.
 - Panel de administrador para supervisar cuentas, todas sus familias y número de recetas.
 - El administrador puede renombrar o eliminar familias y activar/desactivar cuentas.
 - El administrador puede consultar todas las recetas; únicamente el autor puede editarlas o borrarlas.
-- Iconos de administración con inicial de respaldo cuando una foto no carga.
 - Selector de iconos de comida y bebida por categorías.
 - Exportación JSON escondida en el menú secundario de escritorio.
 - Footer anclado al final de la ventana incluso en páginas con poco contenido.
@@ -37,21 +38,11 @@ Aplicación web responsive y privada para guardar recetas propias, buscarlas por
 
 ## Supabase
 
-Scripts aplicados al proyecto, en este orden:
-
-1. `supabase/001_recetas.sql`
-2. `supabase/002_familias.sql`
-3. `supabase/003_reparar_familias.sql`
-4. `supabase/004_cuentas_admin.sql`
-5. `supabase/005_permisos_recetas.sql`
-6. `supabase/006_perfiles_multifamilia.sql`
-7. `supabase/007_familias_comentarios.sql`
-
-El script 006 añade `username`, avatar privado y familias múltiples. El 007 añade el límite de tres familias para cuentas normales, borrado seguro de grupos y la estructura de comentarios anidados.
+El proyecto utiliza las migraciones almacenadas en `supabase/`, aplicadas de forma incremental desde `001_recetas.sql` hasta las versiones actuales.
 
 ### Acceso por nombre de usuario
 
-Se utiliza el mismo enfoque que en Book Affinity, pero con una función separada para no interferir con aquel proyecto:
+Se utiliza una Edge Function separada para resolver el acceso por usuario sin interferir con otros proyectos del mismo Supabase:
 
 - Función: `supabase/functions/recetario-username-login/index.ts`
 - Configuración: `supabase/config.toml`
