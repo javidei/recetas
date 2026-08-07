@@ -7,10 +7,10 @@
   <meta name="description" content="Cuenta familiar del Recetario de Javi.">
   <title>Mi cuenta · Recetario de Javi</title>
   <link rel="icon" href="assets/recetario.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=0.5.0">
-  <link rel="stylesheet" href="account.css?v=0.5.0">
-  <script defer src="recetario-config.js?v=0.5.0"></script>
-  <script defer src="account.js?v=0.5.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.6.0">
+  <link rel="stylesheet" href="account.css?v=0.6.0">
+  <script defer src="recetario-config.js?v=0.6.0"></script>
+  <script defer src="account.js?v=0.6.0"></script>
 </head>
 <body class="account-page">
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -18,17 +18,17 @@
     <div class="shell header-inner">
       <a class="brand" href="./" aria-label="Volver al recetario">
         <img src="assets/recetario.svg" alt="" width="46" height="46">
-        <span><strong>Recetario de Javi</strong><small>Cuenta y familia</small></span>
+        <span><strong>Recetario de Javi</strong><small>Cuenta y familias</small></span>
       </a>
       <a class="button button--soft" href="./">← Volver a las recetas</a>
     </div>
   </header>
 
   <main id="contenido" class="account-main shell">
-    <section class="account-hero">
+    <section class="account-hero" id="account-hero">
       <span class="eyebrow">Tu espacio privado</span>
-      <h1>Una cuenta para cocinar en familia.</h1>
-      <p>Accede o crea una cuenta para entrar al recetario. Sin sesión iniciada no se muestra el catálogo ni ninguna receta.</p>
+      <h1>Tu recetario, también en familia.</h1>
+      <p>Accede con correo o nombre de usuario. Sin una sesión válida no se muestra ninguna receta.</p>
     </section>
 
     <section class="account-card auth-card" id="guest-section">
@@ -41,9 +41,9 @@
         <div class="account-heading">
           <span class="eyebrow">Ya tengo cuenta</span>
           <h2>Bienvenido de nuevo</h2>
-          <p>Entra para ver tus recetas y las que haya compartido tu familia.</p>
+          <p>Puedes usar tu correo electrónico o tu nombre de usuario.</p>
         </div>
-        <label class="field"><span>Correo electrónico</span><input id="login-email" type="email" autocomplete="email" required></label>
+        <label class="field"><span>Correo o usuario</span><input id="login-identifier" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Ej.: javi o correo@ejemplo.com"></label>
         <label class="field"><span>Contraseña</span><input id="login-password" type="password" autocomplete="current-password" minlength="6" required></label>
         <button class="button account-submit" type="submit">Iniciar sesión</button>
       </form>
@@ -52,9 +52,10 @@
         <div class="account-heading">
           <span class="eyebrow">Nueva cuenta</span>
           <h2>Únete al recetario</h2>
-          <p>Hay un máximo de 10 cuentas activas. Después podrás crear una familia o entrar usando un código de invitación.</p>
+          <p>Hay un máximo de 10 cuentas activas. El usuario será único y también servirá para iniciar sesión.</p>
         </div>
         <label class="field"><span>Nombre</span><input id="register-name" type="text" autocomplete="name" maxlength="60" required placeholder="Ej.: María"></label>
+        <label class="field"><span>Nombre de usuario</span><input id="register-username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="3" maxlength="24" pattern="[a-z0-9_]{3,24}" required placeholder="Ej.: maria"><small>3–24 caracteres: letras minúsculas, números y guion bajo.</small></label>
         <label class="field"><span>Correo electrónico</span><input id="register-email" type="email" autocomplete="email" required></label>
         <label class="field"><span>Contraseña</span><input id="register-password" type="password" autocomplete="new-password" minlength="6" required></label>
         <label class="field"><span>Repite la contraseña</span><input id="register-password-confirm" type="password" autocomplete="new-password" minlength="6" required></label>
@@ -69,48 +70,62 @@
           <span class="eyebrow">Mi perfil</span>
           <div class="profile-summary">
             <span class="profile-avatar" id="profile-avatar" aria-hidden="true">J</span>
-            <div><h2 id="profile-name">Mi cuenta</h2><p id="profile-email"></p></div>
+            <div>
+              <h2 id="profile-name">Mi cuenta</h2>
+              <p id="profile-username">@usuario</p>
+              <small id="profile-email"></small>
+            </div>
           </div>
+
+          <div class="avatar-upload-box">
+            <div>
+              <strong>Foto de perfil</strong>
+              <p>Se recortará al centro y se reducirá automáticamente para que encaje bien en el avatar.</p>
+            </div>
+            <label class="button button--soft avatar-upload-button">
+              Elegir foto
+              <input id="profile-avatar-input" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+            </label>
+          </div>
+          <p class="account-message compact-message" id="avatar-message" aria-live="polite"></p>
+
           <form class="inline-form" id="profile-form">
             <label class="field"><span>Nombre visible</span><input id="profile-name-input" maxlength="60" required></label>
-            <button class="button button--soft" type="submit">Guardar nombre</button>
+            <label class="field"><span>Nombre de usuario</span><input id="profile-username-input" minlength="3" maxlength="24" pattern="[a-z0-9_]{3,24}" autocapitalize="none" spellcheck="false" required><small>También podrás usarlo para iniciar sesión.</small></label>
+            <button class="button button--soft" type="submit">Guardar perfil</button>
           </form>
-          <a class="button admin-link" id="admin-link" href="admin.html" hidden>Administrar cuentas</a>
+          <a class="button admin-link" id="admin-link" href="admin.html" hidden>Administrar cuentas y familias</a>
           <button class="text-button danger-text" id="logout-button" type="button">Cerrar sesión</button>
         </article>
 
         <article class="account-card family-card" id="family-card">
-          <div id="family-empty">
-            <span class="eyebrow">Recetario familiar</span>
-            <h2>Crea tu familia o únete a una</h2>
-            <p>Las recetas familiares solo serán visibles para las cuentas que pertenezcan al mismo grupo.</p>
-            <div class="family-actions-grid">
-              <form class="mini-card" id="create-family-form">
-                <h3>Crear una familia</h3>
-                <label class="field"><span>Nombre de la familia</span><input id="family-name-input" maxlength="70" required placeholder="Ej.: Familia Díaz"></label>
-                <button class="button" type="submit">Crear familia</button>
-              </form>
-              <form class="mini-card" id="join-family-form">
-                <h3>Entrar con un código</h3>
-                <label class="field"><span>Código familiar</span><input id="family-code-input" maxlength="14" required placeholder="Ej.: A1B2C3D4"></label>
-                <button class="button button--soft" type="submit">Unirme</button>
-              </form>
+          <div class="family-card-heading">
+            <div>
+              <span class="eyebrow">Mis familias</span>
+              <h2>Grupos para compartir recetas</h2>
+              <p>Puedes pertenecer a varias familias y elegir en qué grupo compartir cada receta.</p>
             </div>
           </div>
 
-          <div id="family-active" hidden>
-            <div class="family-title-row">
-              <div><span class="eyebrow">Mi familia</span><h2 id="family-name">Familia</h2></div>
-              <span class="role-badge" id="family-role">Miembro</span>
-            </div>
-            <div class="invite-box">
-              <div><span>Código para invitar</span><strong id="family-code">—</strong></div>
-              <button class="button button--soft" id="copy-family-code" type="button">Copiar código</button>
-            </div>
-            <h3>Personas del recetario</h3>
-            <div class="family-members" id="family-members"></div>
+          <div class="family-actions-grid">
+            <form class="mini-card" id="create-family-form">
+              <h3>Crear una familia</h3>
+              <label class="field"><span>Nombre de la familia</span><input id="family-name-input" maxlength="70" required placeholder="Ej.: Familia Díaz"></label>
+              <button class="button" type="submit">Crear familia</button>
+            </form>
+            <form class="mini-card" id="join-family-form">
+              <h3>Entrar con un código</h3>
+              <label class="field"><span>Código familiar</span><input id="family-code-input" maxlength="14" required placeholder="Ej.: A1B2C3D4"></label>
+              <button class="button button--soft" type="submit">Unirme</button>
+            </form>
           </div>
 
+          <div class="families-list" id="families-list"></div>
+          <div class="family-empty-state" id="families-empty">
+            <span aria-hidden="true">👨‍👩‍👧‍👦</span>
+            <strong>Todavía no perteneces a ninguna familia</strong>
+            <p>Crea una arriba o introduce el código que te haya enviado un familiar.</p>
+          </div>
           <p class="account-message" id="family-message" aria-live="polite"></p>
         </article>
       </div>
@@ -129,7 +144,7 @@
   <footer class="site-footer">
     <div class="shell footer-inner">
       <div><strong>Recetario de Javi</strong><span>Cuentas privadas y recetas familiares con Supabase</span></div>
-      <div class="version-block"><span>Versión <strong>0.5.0</strong></span><span>07/08/2026</span></div>
+      <div class="version-block"><span>Versión <strong>0.6.0</strong></span><span>07/08/2026</span></div>
     </div>
   </footer>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
