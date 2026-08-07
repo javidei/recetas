@@ -8,14 +8,14 @@
   <title>El Recetario</title>
   <link rel="icon" href="assets/recetario.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
-  <script src="private-gate.js?v=0.8.3"></script>
-  <link rel="stylesheet" href="styles.css?v=0.8.3">
-  <link rel="stylesheet" href="supabase.css?v=0.8.3">
-  <link rel="stylesheet" href="recipe-save.css?v=0.8.3">
-  <script defer src="recetario-config.js?v=0.8.3"></script>
-  <script defer src="app.js?v=0.8.3"></script>
-  <script defer src="recipe-save.js?v=0.8.3"></script>
-  <script defer src="supabase-sync.js?v=0.8.3"></script>
+  <script src="private-gate.js?v=0.8.4"></script>
+  <link rel="stylesheet" href="styles.css?v=0.8.4">
+  <link rel="stylesheet" href="supabase.css?v=0.8.4">
+  <link rel="stylesheet" href="recipe-save.css?v=0.8.4">
+  <script defer src="recetario-config.js?v=0.8.4"></script>
+  <script defer src="app.js?v=0.8.4"></script>
+  <script defer src="recipe-save.js?v=0.8.4"></script>
+  <script defer src="supabase-sync.js?v=0.8.4"></script>
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -142,7 +142,7 @@
         <span>HTML, CSS, JavaScript y Supabase · GitHub Pages</span>
       </div>
       <div class="version-block">
-        <span>Versión <strong>0.8.3</strong></span>
+        <span>Versión <strong>0.8.4</strong></span>
         <span>07/08/2026</span>
       </div>
     </div>
@@ -169,7 +169,7 @@
       <div class="form-grid">
         <label class="field field--wide"><span>Nombre *</span><input id="recipe-title" name="title" required maxlength="90" placeholder="Ej.: Pollo al horno de casa"></label>
         <label class="field field--wide"><span>Descripción breve *</span><textarea id="recipe-summary" name="summary" required rows="2" maxlength="220" placeholder="Una frase para reconocer la receta."></textarea></label>
-        <label class="field"><span>Categoría</span><select id="recipe-category" name="category"><option value="principal">Plato principal</option><option value="entrante">Entrante</option><option value="postre">Postre</option><option value="desayuno">Desayuno</option></select></label>
+        <label class="field"><span>Categoría</span><select id="recipe-category" name="category"><option value="principal">Plato principal</option><option value="entrante">Entrante</option><option value="postre">Postres</option><option value="desayuno">Desayunos</option></select></label>
         <label class="field"><span>Dificultad</span><select id="recipe-difficulty" name="difficulty"><option>Fácil</option><option>Media</option><option>Difícil</option></select></label>
         <label class="field"><span>Raciones</span><input id="recipe-servings" name="servings" type="number" min="1" max="30" value="2"></label>
         <label class="field"><span>Preparación (min)</span><input id="recipe-prep" name="prepMinutes" type="number" min="0" max="1440" value="10"></label>
