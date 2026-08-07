@@ -4,7 +4,7 @@
 window.RECETARIO_CONFIG = Object.freeze({
   supabaseUrl: 'https://avboupigkstzprrgvlhr.supabase.co',
   supabasePublishableKey: 'sb_publishable_eyFLhKFk9HXAab4q1cxG4A_-_la1-OI',
-  version: '0.8.1',
+  version: '0.8.2',
   releaseDate: '07/08/2026'
 });
 
@@ -33,29 +33,29 @@ window.RECETARIO_CONFIG = Object.freeze({
     document.body.appendChild(script);
   }
 
-  addStyle('layout-fixes.css?v=0.8.1', 'layout');
-  addStyle('community.css?v=0.8.1', 'community');
-  addStyle('confirmation-ui.css?v=0.8.1', 'confirmation-ui');
-  addStyle('notifications.css?v=0.8.1', 'notifications');
+  addStyle('layout-fixes.css?v=0.8.2', 'layout');
+  addStyle('community.css?v=0.8.2', 'community');
+  addStyle('confirmation-ui.css?v=0.8.2', 'confirmation-ui');
+  addStyle('notifications.css?v=0.8.2', 'notifications');
 
   window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.version-block strong').forEach(node => { node.textContent = config.version; });
-    addScript('confirmation-ui.js?v=0.8.1', 'confirmation-ui');
+    addScript('confirmation-ui.js?v=0.8.2', 'confirmation-ui');
   });
 
   window.addEventListener('load', () => {
     const path = window.location.pathname;
     if (/\/cuenta\.html$/i.test(path)) {
-      addScript('account-header.js?v=0.8.1', 'account-header');
-      addScript('family-actions.js?v=0.8.1', 'family-actions');
+      addScript('account-header.js?v=0.8.2', 'account-header');
+      addScript('family-actions.js?v=0.8.2', 'family-actions');
     } else if (/\/admin\.html$/i.test(path)) {
-      addScript('admin-enhancements.js?v=0.8.1', 'admin-enhancements');
+      addScript('admin-enhancements.js?v=0.8.2', 'admin-enhancements');
     } else {
-      addScript('recipe-community.js?v=0.8.1', 'recipe-community');
-      addScript('recipe-metadata.js?v=0.8.1', 'recipe-metadata');
-      addScript('recipe-defaults.js?v=0.8.1', 'recipe-defaults');
+      addScript('recipe-community.js?v=0.8.2', 'recipe-community');
+      addScript('recipe-metadata.js?v=0.8.2', 'recipe-metadata');
+      addScript('recipe-defaults.js?v=0.8.2', 'recipe-defaults');
     }
-    addScript('notifications.js?v=0.8.1', 'notifications');
+    addScript('notifications.js?v=0.8.2', 'notifications');
   });
 
   // Compatibilidad: el catálogo antiguo pedía "profiles".
