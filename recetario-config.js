@@ -4,7 +4,7 @@
 window.RECETARIO_CONFIG = Object.freeze({
   supabaseUrl: 'https://avboupigkstzprrgvlhr.supabase.co',
   supabasePublishableKey: 'sb_publishable_eyFLhKFk9HXAab4q1cxG4A_-_la1-OI',
-  version: '0.4.0',
+  version: '0.5.0',
   releaseDate: '07/08/2026'
 });
 
@@ -15,8 +15,8 @@ window.RECETARIO_CONFIG = Object.freeze({
   const SESSION_KEY = 'recetario-javi-supabase-session-v1';
   const nativeFetch = window.fetch.bind(window);
 
-  // Compatibilidad temporal: el catálogo anterior pedía "profiles".
-  // Desde 0.4.0 esos datos viven exclusivamente en recetario_accounts.
+  // Compatibilidad: el catálogo anterior pedía "profiles".
+  // Esos datos viven exclusivamente en recetario_accounts.
   window.fetch = function recetarioFetch(input, options) {
     const raw = typeof input === 'string' ? input : input?.url;
     if (!raw) return nativeFetch(input, options);
