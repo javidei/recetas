@@ -1,33 +1,38 @@
 # Recetario de Javi
 
-Aplicación web responsive para guardar recetas propias, buscarlas por varios ingredientes y compartirlas dentro de un grupo familiar privado.
+Aplicación web responsive y privada para guardar recetas propias, buscarlas por varios ingredientes y compartirlas dentro de un grupo familiar.
 
 ## Versión actual
 
-**0.3.0 · 07/08/2026**
+**0.4.0 · 07/08/2026**
 
 ## Incluido
 
-- Catálogo inicial con recetas de ejemplo y fichas completas.
+- Catálogo con fichas completas de recetas.
 - Buscador que admite varios ingredientes separados por comas, `+` o punto y coma.
 - Filtros, ordenación, favoritos y estadísticas.
 - Alta, edición y borrado de recetas.
-- Guardado local sin cuenta y sincronización con Supabase al iniciar sesión.
-- Subida privada de fotografías.
-- Página independiente de acceso, registro y perfil.
+- Acceso obligatorio: sin sesión no se muestra el catálogo.
+- Sincronización con Supabase y subida privada de fotografías.
+- Página independiente de inicio de sesión, registro y perfil.
 - Familias privadas mediante código de invitación.
 - Recetas configurables como privadas o compartidas con la familia.
+- Máximo de 10 cuentas activas del recetario.
+- Panel de administrador para supervisar y activar/desactivar cuentas.
+- El administrador puede consultar todas las recetas; únicamente el autor puede editarlas o borrarlas.
 - Exportación JSON escondida en el menú secundario de escritorio.
-- Diseño responsive, accesible y preparado como PWA.
+- Diseño responsive y PWA.
 
 ## Supabase
 
-Ejecutar los scripts en este orden:
+Scripts aplicados al proyecto:
 
 1. `supabase/001_recetas.sql`
 2. `supabase/002_familias.sql`
+3. `supabase/003_reparar_familias.sql`
+4. `supabase/004_cuentas_admin.sql`
 
-El segundo script añade perfiles, familias, miembros, códigos de invitación, visibilidad familiar y nuevas políticas RLS. Las recetas familiares pueden leerlas todos los miembros, pero solo puede editarlas o eliminarlas la persona que las creó.
+La versión 0.4.0 utiliza `recetario_accounts` para aislar completamente las cuentas de esta aplicación de los perfiles utilizados por otros proyectos dentro del mismo Supabase. El script 004 debe ejecutarse una sola vez para activar el límite de cuentas y el panel de administración.
 
 ## Futuro OCR + IA
 
