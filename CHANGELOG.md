@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0 — 07/08/2026
+
+- Corregidas las pestañas de inicio de sesión y registro: solo se muestra el formulario activo.
+- El catálogo pasa a ser privado: sin una sesión válida se redirige a `cuenta.html` y no se muestran recetas.
+- Eliminado el falso aviso permanente de reparación familiar.
+- Cuentas del recetario aisladas en `recetario_accounts`, sin mezclar usuarios de otros proyectos del mismo Supabase.
+- Máximo de 10 cuentas activas para el Recetario.
+- Primera cuenta administradora con acceso a un panel privado.
+- Nuevo `admin.html` para consultar cuentas, correo, familia, estado y número de recetas.
+- El administrador puede desactivar y reactivar cuentas familiares.
+- El administrador puede consultar todas las recetas mediante RLS, aunque solo el autor puede modificarlas.
+- Nuevos registros identificados mediante metadata `app=recetario`.
+- Añadida la migración `supabase/004_cuentas_admin.sql`.
+
 ## 0.3.0 — 07/08/2026
 
 - Encabezado simplificado: nunca aparecen simultáneamente Acceder y Cerrar sesión.
@@ -12,7 +26,6 @@
 - Las recetas pueden guardarse como privadas o compartidas con la familia.
 - Los familiares pueden consultar las recetas compartidas, pero solo el autor puede modificarlas.
 - Migración de recetas locales explicada y ubicada dentro de Mi cuenta.
-- Añadida la migración `supabase/002_familias.sql` con tablas, funciones y políticas RLS.
 
 ## 0.2.0 — 07/08/2026
 
