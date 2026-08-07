@@ -1,0 +1,13 @@
+/* Layout común · mantiene el footer al fondo incluso con poco contenido. */
+html { min-height: 100%; }
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+body > main { flex: 1 0 auto; }
+.site-footer {
+  flex: 0 0 auto;
+  margin-top: auto;
+}
