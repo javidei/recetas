@@ -1,14 +1,14 @@
-const CACHE_NAME = 'el-recetario-v0.10.2';
+const CACHE_NAME = 'el-recetario-v0.10.3';
 const APP_SHELL = [
   './', './index.html', './cuenta.html', './admin.html',
-  './styles.css?v=0.10.2', './supabase.css?v=0.10.2', './account.css?v=0.10.2', './admin.css?v=0.10.2',
-  './recipe-save.css?v=0.10.2', './layout-fixes.css?v=0.10.2', './community.css?v=0.10.2', './confirmation-ui.css?v=0.10.2', './notifications.css?v=0.10.2', './family-ui-settings.css?v=0.10.2', './ai-recipe.css?v=0.10.2',
-  './private-gate.js?v=0.10.2', './recetario-config.js?v=0.10.2', './app.js?v=0.10.2',
-  './recipe-save.js?v=0.10.2', './supabase-sync.js?v=0.10.2', './account.js?v=0.10.2', './admin.js?v=0.10.2',
-  './recipe-community.js?v=0.10.2', './recipe-metadata.js?v=0.10.2', './recipe-defaults.js?v=0.10.2',
-  './family-actions.js?v=0.10.2', './family-ui-settings.js?v=0.10.2', './admin-enhancements.js?v=0.10.2', './admin-capacity.js?v=0.10.2',
-  './confirmation-ui.js?v=0.10.2', './registration-patch.js?v=0.10.2', './ai-recipe.js?v=0.10.2',
-  './account-header.js?v=0.10.2', './notifications.js?v=0.10.2',
+  './styles.css?v=0.10.3', './supabase.css?v=0.10.3', './account.css?v=0.10.3', './admin.css?v=0.10.3',
+  './recipe-save.css?v=0.10.3', './layout-fixes.css?v=0.10.3', './community.css?v=0.10.3', './confirmation-ui.css?v=0.10.3', './notifications.css?v=0.10.3', './family-ui-settings.css?v=0.10.3', './ai-recipe.css?v=0.10.3',
+  './private-gate.js?v=0.10.3', './recetario-config.js?v=0.10.3', './app.js?v=0.10.3',
+  './recipe-save.js?v=0.10.3', './supabase-sync.js?v=0.10.3', './account.js?v=0.10.3', './admin.js?v=0.10.3',
+  './recipe-community.js?v=0.10.3', './recipe-metadata.js?v=0.10.3', './recipe-defaults.js?v=0.10.3',
+  './family-actions.js?v=0.10.3', './family-ui-settings.js?v=0.10.3', './admin-enhancements.js?v=0.10.3', './admin-capacity.js?v=0.10.3',
+  './confirmation-ui.js?v=0.10.3', './registration-patch.js?v=0.10.3', './ai-recipe.js?v=0.10.3',
+  './account-header.js?v=0.10.3', './notifications.js?v=0.10.3',
   './manifest.webmanifest', './assets/recetario.svg'
 ];
 
