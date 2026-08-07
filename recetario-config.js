@@ -4,7 +4,7 @@
 window.RECETARIO_CONFIG = Object.freeze({
   supabaseUrl: 'https://avboupigkstzprrgvlhr.supabase.co',
   supabasePublishableKey: 'sb_publishable_eyFLhKFk9HXAab4q1cxG4A_-_la1-OI',
-  version: '0.10.2',
+  version: '0.10.3',
   releaseDate: '07/08/2026'
 });
 
@@ -33,37 +33,37 @@ window.RECETARIO_CONFIG = Object.freeze({
     document.body.appendChild(script);
   }
 
-  addStyle('layout-fixes.css?v=0.10.2', 'layout');
-  addStyle('community.css?v=0.10.2', 'community');
-  addStyle('confirmation-ui.css?v=0.10.2', 'confirmation-ui');
-  addStyle('notifications.css?v=0.10.2', 'notifications');
-  addStyle('family-ui-settings.css?v=0.10.2', 'family-ui-settings');
-  addStyle('ai-recipe.css?v=0.10.2', 'ai-recipe');
+  addStyle('layout-fixes.css?v=0.10.3', 'layout');
+  addStyle('community.css?v=0.10.3', 'community');
+  addStyle('confirmation-ui.css?v=0.10.3', 'confirmation-ui');
+  addStyle('notifications.css?v=0.10.3', 'notifications');
+  addStyle('family-ui-settings.css?v=0.10.3', 'family-ui-settings');
+  addStyle('ai-recipe.css?v=0.10.3', 'ai-recipe');
 
   window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.version-block strong').forEach(node => { node.textContent = config.version; });
-    addScript('confirmation-ui.js?v=0.10.2', 'confirmation-ui');
+    addScript('confirmation-ui.js?v=0.10.3', 'confirmation-ui');
   });
 
   window.addEventListener('load', () => {
     const path = window.location.pathname;
     if (/\/cuenta\.html$/i.test(path)) {
-      addScript('registration-patch.js?v=0.10.2', 'registration-patch');
-      addScript('account-header.js?v=0.10.2', 'account-header');
-      addScript('family-actions.js?v=0.10.2', 'family-actions');
-      addScript('family-ui-settings.js?v=0.10.2', 'family-ui-settings');
+      addScript('registration-patch.js?v=0.10.3', 'registration-patch');
+      addScript('account-header.js?v=0.10.3', 'account-header');
+      addScript('family-actions.js?v=0.10.3', 'family-actions');
+      addScript('family-ui-settings.js?v=0.10.3', 'family-ui-settings');
     } else if (/\/admin\.html$/i.test(path)) {
-      addScript('admin-enhancements.js?v=0.10.2', 'admin-enhancements');
-      addScript('admin-capacity.js?v=0.10.2', 'admin-capacity');
-      addScript('family-ui-settings.js?v=0.10.2', 'family-ui-settings');
-      addScript('ai-recipe.js?v=0.10.2', 'ai-recipe');
+      addScript('admin-enhancements.js?v=0.10.3', 'admin-enhancements');
+      addScript('admin-capacity.js?v=0.10.3', 'admin-capacity');
+      addScript('family-ui-settings.js?v=0.10.3', 'family-ui-settings');
+      addScript('ai-recipe.js?v=0.10.3', 'ai-recipe');
     } else {
-      addScript('recipe-community.js?v=0.10.2', 'recipe-community');
-      addScript('recipe-metadata.js?v=0.10.2', 'recipe-metadata');
-      addScript('recipe-defaults.js?v=0.10.2', 'recipe-defaults');
-      addScript('ai-recipe.js?v=0.10.2', 'ai-recipe');
+      addScript('recipe-community.js?v=0.10.3', 'recipe-community');
+      addScript('recipe-metadata.js?v=0.10.3', 'recipe-metadata');
+      addScript('recipe-defaults.js?v=0.10.3', 'recipe-defaults');
+      addScript('ai-recipe.js?v=0.10.3', 'ai-recipe');
     }
-    addScript('notifications.js?v=0.10.2', 'notifications');
+    addScript('notifications.js?v=0.10.3', 'notifications');
   });
 
   window.fetch = function recetarioFetch(input, options) {
