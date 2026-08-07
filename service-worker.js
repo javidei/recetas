@@ -1,9 +1,9 @@
-const CACHE_NAME = 'recetario-javi-v0.3.1';
+const CACHE_NAME = 'recetario-javi-v0.4.0';
 const APP_SHELL = [
-  './', './index.html', './cuenta.html',
-  './styles.css?v=0.3.1', './supabase.css?v=0.3.1', './account.css?v=0.3.1',
-  './recetario-config.js?v=0.3.1', './app.js?v=0.3.1', './supabase-sync.js?v=0.3.1',
-  './account-bootstrap.js?v=0.3.1', './account-compat.js?v=0.3.1', './account.js?v=0.3.1',
+  './', './index.html', './cuenta.html', './admin.html',
+  './styles.css?v=0.4.0', './supabase.css?v=0.4.0', './account.css?v=0.4.0', './admin.css?v=0.4.0',
+  './recetario-config.js?v=0.4.0', './app.js?v=0.4.0', './supabase-sync.js?v=0.4.0',
+  './account.js?v=0.4.0', './admin.js?v=0.4.0',
   './manifest.webmanifest', './assets/recetario.svg'
 ];
 
@@ -21,5 +21,5 @@ self.addEventListener('fetch', event => {
     const copy = response.clone();
     caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
     return response;
-  }).catch(() => caches.match(event.request).then(response => response || (event.request.mode === 'navigate' ? caches.match('./index.html') : undefined))));
+  }).catch(() => caches.match(event.request).then(response => response || (event.request.mode === 'navigate' ? caches.match('./cuenta.html') : undefined))));
 });
